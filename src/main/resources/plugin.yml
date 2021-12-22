@@ -1,0 +1,10 @@
+name: Pickaria
+version: 1.0
+api-version: 1.18
+main: fr.pickaria.Main
+author: Macaron, Quozul
+softdepend: [Vault]
+commands:
+  lol:
+    description: Pour rire
+    usage: /<command>
