@@ -55,8 +55,10 @@ class Economy: AbstractEconomy() {
     override fun currencyNameSingular() = "$"
 
     override fun hasAccount(playerName: String?): Boolean {
-        // TODO: Check in database if player has account
-        return false
+        return playerName?.let{
+            val player = getServer().getOfflinePlayer(playerName)
+            return executeSelect("SELECT balance FROM economy WHERE player_uuid =  ${player.uniqueId}")?.next() ?: false
+        } ?: false
     }
 
     override fun hasAccount(playerName: String?, worldName: String?): Boolean {
@@ -87,8 +89,15 @@ class Economy: AbstractEconomy() {
     }
 
     override fun has(playerName: String?, amount: Double): Boolean {
-        // TODO: ??
-        return false
+        playerName ?: return false
+        val player = getServer().getOfflinePlayer(playerName)
+        return executeSelect("SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")?.let{
+            if(it.next()){
+                it.getDouble("balance") >= amount
+            }else{
+                false
+            }
+        } ?: false
     }
 
     override fun has(playerName: String?, worldName: String?, amount: Double): Boolean {
