@@ -8,3 +8,9 @@ commands:
   lol:
     description: Pour rire
     usage: /<command>
+  money:
+    description: Voir son solde bancaire
+    usage: /money
+  pay:
+    description: Payer un autre joueur
+    usage: /pay <joueur> <montant>
