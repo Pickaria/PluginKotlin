@@ -6,7 +6,6 @@ import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
 import org.bukkit.Bukkit.getServer
 import org.bukkit.OfflinePlayer
-import java.lang.RuntimeException
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
@@ -30,10 +29,7 @@ class Economy: AbstractEconomy() {
     fun executeSelect(sql: String): ResultSet?{
         return try {
             val st: Statement = Main.connection.createStatement()
-            val rs = st.executeQuery(sql)
-            rs.close()
-            st.close()
-            rs
+            st.executeQuery(sql)
         } catch (e: SQLException) {
             e.printStackTrace()
             null
@@ -68,21 +64,15 @@ class Economy: AbstractEconomy() {
     }
 
     override fun getBalance(player: OfflinePlayer): Double {
-        return try {
-            val st: Statement = Main.connection.createStatement()
-            val rs = st.executeQuery( "SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")
-            val balance: Double = if (rs.next()) {
+        return executeSelect("SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")?.let{ rs ->
+            if(rs.next()){
                 rs.getDouble("balance")
-            } else {
+            }else{
                 createPlayerAccount(player)
                 0.0
             }
-            rs.close()
-            st.close()
-            balance
-        } catch (e: SQLException) {
-            e.printStackTrace()
-            return -1.0
+        } ?: run {
+            -1.0
         }
     }
 
