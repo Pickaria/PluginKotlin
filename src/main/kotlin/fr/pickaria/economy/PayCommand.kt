@@ -17,6 +17,8 @@ class PayCommand: CommandExecutor, TabCompleter {
                 args[1].toDouble()
             }catch (_: NumberFormatException){
                 return false
+            }catch(_: ArrayIndexOutOfBoundsException){
+                return false
             }
 
             val withdrawResponse = Main.economy.withdrawPlayer(sender, amount)
@@ -36,14 +38,15 @@ class PayCommand: CommandExecutor, TabCompleter {
         return true
     }
 
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): MutableList<String>? {
-        if(args.size == 1) {
-            return getServer().onlinePlayers.filter{
-                it.name.startsWith(args[0])
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): MutableList<String> {
+        return if(args.size == 1) {
+            getServer().onlinePlayers.filter{
+                it.name.startsWith(args[0]) && (sender as Player).name != it.name
             }.map{
                 it.name
             }.toMutableList()
+        }else {
+            mutableListOf()
         }
-        return null
     }
 }
