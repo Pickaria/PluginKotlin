@@ -24,6 +24,10 @@ class PayCommand: CommandExecutor, TabCompleter {
             val withdrawResponse = Main.economy.withdrawPlayer(sender, amount)
             if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
                 val recipient = getServer().getOfflinePlayer(args[0])
+                if(!recipient.hasPlayedBefore()){
+                    sender.sendMessage("§cCe joueur n'est jamais venu sur ce serveur")
+                    return true
+                }
                 val depositResponse = Main.economy.depositPlayer(recipient, withdrawResponse.amount)
 
                 if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
