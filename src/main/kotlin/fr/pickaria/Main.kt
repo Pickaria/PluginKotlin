@@ -1,5 +1,7 @@
 package fr.pickaria
 
+import fr.pickaria.enchant.Anvil
+import fr.pickaria.spawners.CollectSpawner
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
@@ -29,13 +31,17 @@ class Main: JavaPlugin(), Listener {
 			props.setProperty("user", user)
 			props.setProperty("password", password)
 
+			Class.forName("org.postgresql.Driver");
 			connection = DriverManager.getConnection(url, props)
 		} catch (e: SQLException) {
 			e.printStackTrace()
 		}
 
-		server.pluginManager.registerEvents(Test(), this)
+		server.pluginManager.registerEvents(PlayerLogin(), this)
 		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+		server.pluginManager.registerEvents(Anvil(), this)
+		server.pluginManager.registerEvents(CollectSpawner(), this)
 
 		server.logger.log(Level.INFO, "Pickaria plugin enabled")
 	}
