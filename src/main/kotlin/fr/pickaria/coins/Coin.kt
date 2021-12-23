@@ -16,15 +16,15 @@ import org.bukkit.inventory.ItemStack
 class Coin: Listener {
 	companion object {
 		fun dropCoin(location: Location, amount: Double) {
-			val itemStack = ItemStack(Material.SUNFLOWER, amount.toInt())
+			val itemStack = ItemStack(Material.SUNFLOWER, 1)
 
 			val itemMeta = itemStack.itemMeta
 			itemMeta?.setDisplayName("§6Coin")
 			itemStack.itemMeta = itemMeta
 
-			val item = location.world?.dropItemNaturally(location, itemStack)
-			item?.customName = amount.toString()
-			item?.isCustomNameVisible = true
+			val item = location.world?.dropItemNaturally(location, itemStack) ?: return println("Error")
+			item.customName = amount.toString()
+			item.isCustomNameVisible = true
 		}
 	}
 
@@ -37,7 +37,7 @@ class Coin: Listener {
 
 			if (e.entity is Player) {
 				val player = e.entity as Player
-				val amount: Double = e.item.customName?.toDouble() ?: return
+				val amount = e.item.customName?.toDouble() ?: return
 				val response = Main.economy.depositPlayer(player, amount)
 
 				if (response.type == EconomyResponse.ResponseType.SUCCESS) {
@@ -57,6 +57,8 @@ class Coin: Listener {
 			itemStack2.type == Material.SUNFLOWER && itemStack2.itemMeta?.displayName == "§6Coin") {
 
 			e.target.customName = ((e.entity.customName?.toDouble() ?: 0.0) + (e.target.customName?.toDouble() ?: 0.0)).toString()
+			e.target.itemStack.amount = 1
+			e.entity.itemStack.amount = 0
 		}
 	}
 }

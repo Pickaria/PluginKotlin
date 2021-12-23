@@ -9,7 +9,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 
-class Miner(): Listener {
+class Miner: Listener {
 	private val materials = listOf(
 		Material.COAL_ORE,
 		Material.COPPER_ORE,

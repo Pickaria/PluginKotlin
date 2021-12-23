@@ -22,13 +22,13 @@ class JobController(plugin: Main) {
 		 * Get the currently active job of the user
 		 */
 		fun getJob(playerUuid: UUID): Job? {
-			val rs =
-				executeSelect("SELECT job, level, last_used FROM job WHERE player_uuid = '$playerUuid' AND active = true")
-
-			if (rs?.next() == true) {
-				return Job(JobEnum.valueOf(rs.getString(1)), rs.getInt(2), rs.getTimestamp(3).toLocalDateTime())
+			return executeSelect("SELECT job, level, last_used FROM job WHERE player_uuid = '$playerUuid' AND active = true")?.let { rs ->
+				if(rs.next()){
+					Job(JobEnum.valueOf(rs.getString(1)), rs.getInt(2), rs.getTimestamp(3).toLocalDateTime())
+				}else{
+					null
+				}
 			}
-			return null
 		}
 
 		fun changeJob(playerUuid: UUID, newJob: JobEnum): Int {

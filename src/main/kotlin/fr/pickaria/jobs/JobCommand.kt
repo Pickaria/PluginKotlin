@@ -18,15 +18,9 @@ class JobCommand : CommandExecutor, TabCompleter {
 				"join" -> {
 					try {
 						when (val it = JobController.changeJob(sender.uniqueId, JobEnum.valueOf(args[1].uppercase()))) {
-							-1 -> {
-								sender.sendMessage("§7Vous avez rejoint le métier ${args[1]}.")
-							}
-							-2 -> {
-								sender.sendMessage("§cVous exercez déjà ce métier.")
-							}
-							else -> {
-								sender.sendMessage("§cVous devez attendre $it heures avant de changer de métier.")
-							}
+							-1 -> sender.sendMessage("§7Vous avez rejoint le métier ${args[1]}.")
+							-2 -> sender.sendMessage("§cVous exercez déjà ce métier.")
+							else -> sender.sendMessage("§cVous devez attendre $it heures avant de changer de métier.")
 						}
 					} catch (e: IllegalArgumentException) {
 						sender.sendMessage("§cCe métier n'existe pas.")
@@ -38,7 +32,6 @@ class JobCommand : CommandExecutor, TabCompleter {
 				}
 			}
 		}
-
 		return true
 	}
 
@@ -49,15 +42,9 @@ class JobCommand : CommandExecutor, TabCompleter {
 		args: Array<out String>
 	): MutableList<String> {
 		return when (args.size) {
-			1 -> {
-				mutableListOf("join", "leave")
-			}
-			2 -> {
-				JobEnum.values().map { it.name.lowercase() }.toMutableList()
-			}
-			else -> {
-				mutableListOf()
-			}
+			1 -> mutableListOf("join", "leave")
+			2 -> JobEnum.values().map { it.name.lowercase() }.toMutableList()
+			else -> mutableListOf()
 		}
 	}
 }
