@@ -21,26 +21,26 @@ class PayCommand : CommandExecutor, TabCompleter {
 			}
 
 			if (recipient == sender) {
-				sender.sendMessage("${Color.RED}Vous ne pouvez pas envoyer de l'argent à vous-même.")
+				sender.sendMessage("§cVous ne pouvez pas envoyer de l'argent à vous-même.")
 				return true
 			}
 
 			if (!recipient.hasPlayedBefore()) {
-				sender.sendMessage("${Color.RED}Ce joueur n'est jamais venu sur le serveur.")
+				sender.sendMessage("§cCe joueur n'est jamais venu sur le serveur.")
 				return true
 			}
 
 			val amount = try {
 				args[1].toDouble()
 			} catch (_: NumberFormatException) {
-				sender.sendMessage("${Color.RED}La valeur que vous avez entrée n'est pas un chiffre.")
+				sender.sendMessage("§cLa valeur que vous avez entrée n'est pas un chiffre.")
 				return true
 			} catch (_: ArrayIndexOutOfBoundsException) {
 				return false
 			}
 
 			if (amount <= 0) {
-				sender.sendMessage("${Color.RED}Le montant doit être suppérieur à 0.")
+				sender.sendMessage("§cLe montant doit être suppérieur à 0.")
 				return true
 			}
 
@@ -51,12 +51,14 @@ class PayCommand : CommandExecutor, TabCompleter {
 					val depositResponse = Main.economy.depositPlayer(recipient, withdrawResponse.amount)
 
 					if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
-						sender.sendMessage("${Color.RED}Le destinataire n'a pas pu recevoir l'argent.")
+						sender.sendMessage("§cLe destinataire n'a pas pu recevoir l'argent.")
 						Main.economy.depositPlayer(sender, withdrawResponse.amount)
+					} else {
+						sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}.")
 					}
 				}
 			} else {
-				sender.sendMessage("${Color.RED}Vous n'avez pas assez d'argent.")
+				sender.sendMessage("§cVous n'avez pas assez d'argent.")
 			}
 		}
 
