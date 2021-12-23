@@ -35,7 +35,7 @@ class Main: JavaPlugin(), Listener {
 		}
 
 		server.pluginManager.registerEvents(Test(), this)
-		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+		getCommand("lol")?.setExecutor(Command(this)) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 
 		server.logger.log(Level.INFO, "Pickaria plugin enabled")
 	}
