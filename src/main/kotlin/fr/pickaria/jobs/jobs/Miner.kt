@@ -1,5 +1,6 @@
 package fr.pickaria.jobs.jobs
 
+import fr.pickaria.coins.Coin.Companion.dropCoin
 import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
 import org.bukkit.Material
@@ -8,7 +9,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 
-class Miner: Listener {
+class Miner(): Listener {
 	private val materials = listOf(
 		Material.COAL_ORE,
 		Material.COPPER_ORE,
@@ -40,6 +41,7 @@ class Miner: Listener {
 				val itemInHand = e.player.inventory.itemInMainHand
 				if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && e.block.getDrops(itemInHand).isNotEmpty()) {
 					e.player.sendMessage("§6Vous avez cassé un bloc.")
+					dropCoin(e.block.location, 1.0)
 				}
 			}
 		}

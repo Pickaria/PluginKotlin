@@ -23,9 +23,9 @@ class Economy : AbstractEconomy() {
 
 	override fun format(amount: Double): String {
 		return if (amount <= 1.0) {
-			"${DecimalFormat("#.##").format(amount)} ${currencyNameSingular()}"
+			"${DecimalFormat("#.00").format(amount)} ${currencyNameSingular()}"
 		} else {
-			"${DecimalFormat("#.##").format(amount)} ${currencyNamePlural()}"
+			"${DecimalFormat("#.00").format(amount)} ${currencyNamePlural()}"
 		}
 	}
 
