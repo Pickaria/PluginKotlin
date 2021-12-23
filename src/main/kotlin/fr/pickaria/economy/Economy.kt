@@ -1,6 +1,8 @@
 package fr.pickaria.economy
 
 import fr.pickaria.Main
+import fr.pickaria.executeSQL
+import fr.pickaria.executeSelect
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
@@ -13,29 +15,6 @@ import java.text.DecimalFormat
 
 
 class Economy : AbstractEconomy() {
-
-	private fun executeSQL(sql: String): Boolean {
-		return try {
-			val st: Statement = Main.connection.createStatement()
-			return (st.executeUpdate(sql) > 0).also {
-				st.close()
-			}
-		} catch (e: SQLException) {
-			e.printStackTrace()
-			false
-		}
-	}
-
-	private fun executeSelect(sql: String): ResultSet? {
-		return try {
-			val st: Statement = Main.connection.createStatement()
-			st.executeQuery(sql)
-		} catch (e: SQLException) {
-			e.printStackTrace()
-			null
-		}
-	}
-
 	override fun isEnabled() = true
 
 	override fun getName() = "Pickaria economy"

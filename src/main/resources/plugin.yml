@@ -16,3 +16,6 @@ commands:
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>
+  job:
+    description: Rejoindre ou quitter un métier
+    usage: /job <join|leave> <métier>
