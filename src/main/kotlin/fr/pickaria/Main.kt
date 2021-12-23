@@ -2,6 +2,7 @@ package fr.pickaria
 
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
+import fr.pickaria.randomtp.RandomCommand
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -18,6 +19,8 @@ class Main: JavaPlugin() {
 	companion object {
 		lateinit var connection: Connection
 		lateinit var economy: PickariaEconomy
+		lateinit var x:Random
+		lateinit var z:Random
 	}
 
 	override fun onEnable() {
@@ -45,6 +48,7 @@ class Main: JavaPlugin() {
 		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+		getCommand("tprandom")?.setExecutor(RandomCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 
 		economy = PickariaEconomy()
 		Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)

@@ -2,7 +2,7 @@ name: Pickaria
 version: 1.0
 api-version: 1.18
 main: fr.pickaria.Main
-author: Macaron, Quozul
+author: Macaron, Quozul, Alina
 softdepend: [Vault]
 commands:
   lol:
@@ -14,3 +14,6 @@ commands:
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>
+  tprandom:
+    description: Vous téléporte aléatoirement sur la carte
+    usage: /tprandom
