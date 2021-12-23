@@ -3,7 +3,9 @@ version: 1.0
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul
-softdepend: [Vault]
+depend: [Vault]
+loadbefore: [Towny]
+
 commands:
   lol:
     description: Pour rire

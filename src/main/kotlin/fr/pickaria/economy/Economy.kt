@@ -14,7 +14,7 @@ import java.text.DecimalFormat
 
 class Economy : AbstractEconomy() {
 
-	fun executeSQL(sql: String): Boolean {
+	private fun executeSQL(sql: String): Boolean {
 		return try {
 			val st: Statement = Main.connection.createStatement()
 			return (st.executeUpdate(sql) > 0).also {
@@ -26,7 +26,7 @@ class Economy : AbstractEconomy() {
 		}
 	}
 
-	fun executeSelect(sql: String): ResultSet? {
+	private fun executeSelect(sql: String): ResultSet? {
 		return try {
 			val st: Statement = Main.connection.createStatement()
 			st.executeQuery(sql)
@@ -54,10 +54,13 @@ class Economy : AbstractEconomy() {
 
 	override fun currencyNameSingular() = "$"
 
+	override fun hasAccount(player: OfflinePlayer): Boolean {
+		return executeSelect("SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")?.next() ?: false
+	}
+
 	override fun hasAccount(playerName: String?): Boolean {
 		return playerName?.let {
-			val player = getServer().getOfflinePlayer(playerName)
-			return executeSelect("SELECT balance FROM economy WHERE player_uuid =  ${player.uniqueId}")?.next() ?: false
+			hasAccount(getServer().getOfflinePlayer(playerName))
 		} ?: false
 	}
 
@@ -88,15 +91,19 @@ class Economy : AbstractEconomy() {
 		return getBalance(playerName)
 	}
 
-	override fun has(playerName: String?, amount: Double): Boolean {
-		playerName ?: return false
-		val player = getServer().getOfflinePlayer(playerName)
+	override fun has(player: OfflinePlayer, amount: Double): Boolean {
 		return executeSelect("SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")?.let {
 			if (it.next()) {
 				it.getDouble("balance") >= amount
 			} else {
 				false
 			}
+		} ?: false
+	}
+
+	override fun has(playerName: String?, amount: Double): Boolean {
+		return playerName?.let {
+			has(getServer().getOfflinePlayer(playerName), amount)
 		} ?: false
 	}
 
