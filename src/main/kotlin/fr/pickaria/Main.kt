@@ -2,10 +2,11 @@ package fr.pickaria
 
 import fr.pickaria.tablist.playerList
 import net.milkbowl.vault.chat.Chat
-import org.bukkit.event.Listener
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
+import fr.pickaria.tablist.ChatFormat
+import fr.pickaria.tablist.PlayerJoin
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -43,7 +44,8 @@ class Main: JavaPlugin() {
 
 		setupChat()
 
-		server.pluginManager.registerEvents(Test(), this)
+		server.pluginManager.registerEvents(PlayerJoin(), this)
+		server.pluginManager.registerEvents(ChatFormat(), this)
 		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
