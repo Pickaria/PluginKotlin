@@ -3,8 +3,19 @@ version: 1.0
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul
-softdepend: [Vault, ProtocolLib]
+depend: [Vault, ProtocolLib]
+loadbefore: [Towny]
+
 commands:
   lol:
     description: Pour rire
     usage: /<command>
+  money:
+    description: Voir son solde bancaire
+    usage: /money
+  pay:
+    description: Payer un autre joueur
+    usage: /pay <joueur> <montant>
+  baltop:
+    description: Affiche la liste des joueurs les plus riches
+    usage: /baltop [page]
