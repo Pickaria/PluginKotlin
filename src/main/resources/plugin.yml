@@ -16,3 +16,6 @@ commands:
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>
+  baltop:
+    description: Affiche la liste des joueurs les plus riches
+    usage: /baltop [page]
