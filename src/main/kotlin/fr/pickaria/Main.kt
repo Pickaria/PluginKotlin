@@ -6,6 +6,7 @@ import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
 import fr.pickaria.tablist.ChatFormat
+import fr.pickaria.tablist.Motd
 import fr.pickaria.tablist.PlayerJoin
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
@@ -46,6 +47,8 @@ class Main: JavaPlugin() {
 
 		server.pluginManager.registerEvents(PlayerJoin(), this)
 		server.pluginManager.registerEvents(ChatFormat(), this)
+		server.pluginManager.registerEvents(Motd(), this)
+
 		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
