@@ -6,17 +6,15 @@ import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
-import java.sql.Connection
-import java.sql.DriverManager
+import org.ktorm.database.Database
 import java.sql.SQLException
-import java.util.*
 import java.util.logging.Level
-import fr.pickaria.economy.Economy as PickariaEconomy
+import fr.pickaria.economy.PickariaEconomy as PickariaEconomy
 
 
 class Main: JavaPlugin() {
 	companion object {
-		lateinit var connection: Connection
+		lateinit var database: Database
 		lateinit var economy: PickariaEconomy
 	}
 
@@ -26,17 +24,14 @@ class Main: JavaPlugin() {
 		saveDefaultConfig()
 
 		try {
-			val database = this.config.getConfigurationSection("database")
-			val url = database?.getString("url") ?: "localhost"
-			val user = database?.getString("user") ?: "admin"
-			val password = database?.getString("password") ?: "admin"
+			val databaseConfiguration = this.config.getConfigurationSection("database")
 
-			val props = Properties()
-			props.setProperty("user", user)
-			props.setProperty("password", password)
+			val url = databaseConfiguration?.getString("url") ?: "localhost"
+			val user = databaseConfiguration?.getString("user") ?: "admin"
+			val password = databaseConfiguration?.getString("password") ?: "admin"
 
 			Class.forName("org.postgresql.Driver")
-			connection = DriverManager.getConnection(url, props)
+			database = Database.connect(url, user = user, password = password)
 		} catch (e: SQLException) {
 			e.printStackTrace()
 		}

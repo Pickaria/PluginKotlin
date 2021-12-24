@@ -39,26 +39,26 @@ class PayCommand : CommandExecutor, TabCompleter {
 				return false
 			}
 
-			if (amount <= 0) {
-				sender.sendMessage("§cLe montant doit être suppérieur à 0.")
+			if (amount <= 0.01) {
+				sender.sendMessage("§cLe montant doit être suppérieure à 0.01.")
 				return true
 			}
 
-			if (Main.economy.has(sender, amount)) {
-				val withdrawResponse = Main.economy.withdrawPlayer(sender, amount)
+			val withdrawResponse = Main.economy.withdrawPlayer(sender, amount)
 
-				if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
-					val depositResponse = Main.economy.depositPlayer(recipient, withdrawResponse.amount)
+			if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
+				val depositResponse = Main.economy.depositPlayer(recipient, withdrawResponse.amount)
 
-					if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
-						sender.sendMessage("§cLe destinataire n'a pas pu recevoir l'argent.")
-						Main.economy.depositPlayer(sender, withdrawResponse.amount)
-					} else {
-						sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}.")
-					}
+				if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
+					sender.sendMessage("§cLe destinataire n'a pas pu recevoir l'argent.")
+					Main.economy.depositPlayer(sender, withdrawResponse.amount)
+				} else {
+					sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}.")
 				}
-			} else {
+			} else if (withdrawResponse.errorMessage == EconomyErrorMessages.NOT_ENOUGH_MONEY.name) {
 				sender.sendMessage("§cVous n'avez pas assez d'argent.")
+			} else {
+				sender.sendMessage("§cUne erreur est survenue lors de la transaction.")
 			}
 		}
 
