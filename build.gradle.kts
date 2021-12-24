@@ -12,8 +12,9 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    maven("https://papermc.io/repo/repository/maven-public/")
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // spigot-api
+    maven("https://papermc.io/repo/repository/maven-public/") // paper-api
+    maven("https://repo.dmulloy2.net/repository/public/") // protocol lib
     maven("https://jitpack.io")
 }
 
@@ -27,6 +28,8 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
+
+    compileOnly("com.comphenix.protocol:ProtocolLib:4.7.0")
 }
 
 tasks.withType<KotlinCompile>{

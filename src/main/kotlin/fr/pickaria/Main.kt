@@ -1,6 +1,7 @@
 package fr.pickaria
 
-import org.bukkit.event.EventHandler
+import fr.pickaria.tablist.playerList
+import net.milkbowl.vault.chat.Chat
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.sql.Connection
@@ -9,9 +10,11 @@ import java.sql.SQLException
 import java.util.*
 import java.util.logging.Level
 
+
 class Main: JavaPlugin(), Listener {
 	companion object {
 		lateinit var connection: Connection
+		lateinit var chat: Chat
 	}
 
 	override fun onEnable() {
@@ -34,26 +37,21 @@ class Main: JavaPlugin(), Listener {
 			e.printStackTrace()
 		}
 
+		setupChat()
+
 		server.pluginManager.registerEvents(Test(), this)
 		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+		playerList(this)
 
 		server.logger.log(Level.INFO, "Pickaria plugin enabled")
 	}
 
-	var admin = 0
-
-	@EventHandler
-	fun onAdminJoinEvent(event: AdminJoinEvent){
-		admin++
-		server.logger.log(Level.WARNING, "Admin ${event.admin} Logged")
-		server.logger.log(Level.WARNING, "$admin connected")
-	}
-
-	@EventHandler
-	fun onAdminLeaveEvent(event: AdminLeaveEvent){
-		admin--
-		server.logger.log(Level.WARNING, "Admin ${event.admin} Logged out")
-		server.logger.log(Level.WARNING, "$admin connected")
+	private fun setupChat() {
+		val rsp = server.servicesManager.getRegistration(
+			Chat::class.java
+		)
+		chat = rsp!!.provider
 	}
 
 	override fun onDisable() {
