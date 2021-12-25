@@ -1,6 +1,7 @@
 package fr.pickaria.jobs
 
 import fr.pickaria.Main
+import fr.pickaria.jobs.jobs.Hunter
 import fr.pickaria.jobs.jobs.Miner
 import fr.pickaria.model.Job
 import fr.pickaria.model.job
@@ -23,6 +24,7 @@ import kotlin.time.DurationUnit
 class JobController(plugin: Main) {
 	init {
 		getServer().pluginManager.registerEvents(Miner(), plugin)
+		getServer().pluginManager.registerEvents(Hunter(), plugin)
 	}
 
 	companion object {

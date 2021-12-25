@@ -40,7 +40,6 @@ class Miner: Listener {
 				// check if player is using silk touch
 				val itemInHand = e.player.inventory.itemInMainHand
 				if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && e.block.getDrops(itemInHand).isNotEmpty()) {
-					e.player.sendMessage("§6Vous avez cassé un bloc.")
 					dropCoin(e.block.location, 1.0)
 				}
 			}
