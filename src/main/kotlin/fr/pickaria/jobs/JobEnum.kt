@@ -4,4 +4,5 @@ enum class JobEnum {
 	NONE,
 	MINER,
 	HUNTER,
+	FARMER,
 }
