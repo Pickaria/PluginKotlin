@@ -1,6 +1,7 @@
 package fr.pickaria.jobs
 
 import fr.pickaria.Main
+import fr.pickaria.jobs.jobs.Breeder
 import fr.pickaria.jobs.jobs.Farmer
 import fr.pickaria.jobs.jobs.Hunter
 import fr.pickaria.jobs.jobs.Miner
@@ -27,6 +28,7 @@ class JobController(plugin: Main) {
 		getServer().pluginManager.registerEvents(Miner(), plugin)
 		getServer().pluginManager.registerEvents(Hunter(), plugin)
 		getServer().pluginManager.registerEvents(Farmer(), plugin)
+		getServer().pluginManager.registerEvents(Breeder(), plugin)
 	}
 
 	companion object {
