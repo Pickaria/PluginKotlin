@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
@@ -25,11 +26,26 @@ class JobController(plugin: Main) {
 	}
 
 	companion object {
+		private val playerJobs = HashMap<UUID, Job>()
+
 		/**
 		 * Get the currently active job of the user
 		 */
 		fun getJob(playerUuid: UUID): Job? {
-			return Main.database.job.find { it.playerUniqueId eq playerUuid and it.active }
+			// Get from cache
+			if (playerJobs.contains(playerUuid)) {
+				return playerJobs[playerUuid]
+			}
+
+			val job = Main.database.job.find { it.playerUniqueId eq playerUuid and it.active }
+
+			return if (job != null) {
+				// Save job in cache
+				playerJobs[playerUuid] = job
+				job
+			} else {
+				null
+			}
 		}
 
 		/**
@@ -46,18 +62,22 @@ class JobController(plugin: Main) {
 			val previousDay = LocalDateTime.now().minusDays(1)
 
 			getJob(playerUuid)?.let { job ->
-				val local = LocalDateTime.ofInstant(job.lastUsed, ZoneOffset.UTC)
+				val local = LocalDateTime.ofInstant(job.lastUsed, ZoneOffset.systemDefault())
 				if (job.job == newJob.name) {
-					return -2
+					return -2 // Already have this job
 				} else if (local > previousDay) {
+					// Must wait before changing job
 					return previousDay.until(local, ChronoUnit.HOURS).hours.toInt(DurationUnit.HOURS)
 				} else {
-					// executeSQL("UPDATE job SET active = false, level = level * 0.8 WHERE player_uuid = '$playerUuid' AND active = true")
+					// UPDATE job SET active = false, level = level * 0.8 WHERE player_uuid = '$playerUuid' AND active = true
 					job.active = false
 					job.level = (job.level * 0.8).toInt()
 					job.flushChanges()
 				}
 			}
+
+			// Invalidate job in cache
+			playerJobs.remove(playerUuid)
 
 			val job = Job {
 				playerUniqueId = playerUuid
@@ -67,10 +87,10 @@ class JobController(plugin: Main) {
 			}
 
 			// 4. set current as "active" = true
-			//executeSQL("insert into job (player_uuid, job, active) values ('$playerUuid', '${newJob.name}', true) on conflict (player_uuid, job) do update set active = true, last_used = now()")
+			// insert into job (player_uuid, job, active) values ('$playerUuid', '${newJob.name}', true) on conflict (player_uuid, job) do update set active = true, last_used = now()
 
 			return try {
-				val insert = Main.database.job.add(job)
+				Main.database.job.add(job)
 				-1
 			} catch (e: SQLException) {
 				Main.database.job.update(job)
