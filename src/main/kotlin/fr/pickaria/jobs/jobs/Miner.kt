@@ -36,7 +36,7 @@ class Miner: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(e: BlockBreakEvent) {
-		if (!JobController.hasJob(e.player.uniqueId, JobEnum.MINER)) {
+		if (JobController.hasJob(e.player.uniqueId, JobEnum.MINER)) {
 			if (materials.contains(e.block.type)) {
 				// check if player is using silk touch
 				val itemInHand = e.player.inventory.itemInMainHand

@@ -17,7 +17,6 @@ import org.bukkit.event.entity.EntityPickupItemEvent
 import org.bukkit.event.entity.ItemMergeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.inventory.ItemStack
-import java.lang.NullPointerException
 
 
 class Coin: Listener {
