@@ -21,6 +21,7 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("org.ktorm:ktorm-core:3.4.1")
+    implementation("org.ktorm:ktorm-support-postgresql:3.4.1")
 
     compileOnly("org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT")
     //compileOnly("org.spigotmc:spigot:1.18-R0.1-SNAPSHOT")

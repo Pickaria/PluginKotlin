@@ -8,6 +8,7 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import org.ktorm.database.Database
+import org.ktorm.support.postgresql.PostgreSqlDialect
 import java.sql.SQLException
 import java.util.logging.Level
 import fr.pickaria.economy.PickariaEconomy as PickariaEconomy
@@ -32,7 +33,7 @@ class Main: JavaPlugin() {
 			val password = databaseConfiguration?.getString("password") ?: "admin"
 
 			Class.forName("org.postgresql.Driver")
-			database = Database.connect(url, user = user, password = password)
+			database = Database.connect(url, user = user, password = password, dialect = PostgreSqlDialect())
 		} catch (e: SQLException) {
 			e.printStackTrace()
 		}
