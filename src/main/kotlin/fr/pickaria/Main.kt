@@ -8,6 +8,8 @@ import fr.pickaria.jobs.JobCommand
 import fr.pickaria.jobs.JobController
 import fr.pickaria.vote.VoteCommand
 import fr.pickaria.vote.VoteListener
+import fr.pickaria.enchant.Anvil
+import fr.pickaria.spawners.CollectSpawner
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -45,8 +47,8 @@ class Main: JavaPlugin() {
 
 		JobController(this)
 
-		server.pluginManager.registerEvents(Test(), this)
 		server.pluginManager.registerEvents(Coin(), this)
+		server.pluginManager.registerEvents(PlayerLogin(), this)
 		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
@@ -55,6 +57,10 @@ class Main: JavaPlugin() {
 
 		server.pluginManager.registerEvents(VoteListener(), this)
 		getCommand("vote")?.setExecutor(VoteCommand(this)) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+		server.pluginManager.registerEvents(Anvil(), this)
+		server.pluginManager.registerEvents(CollectSpawner(), this)
+
+		server.logger.log(Level.INFO, "Pickaria plugin enabled")
 
 		economy = PickariaEconomy()
 		Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)

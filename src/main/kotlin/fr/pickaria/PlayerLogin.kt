@@ -6,7 +6,7 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerQuitEvent
 
-class Test: Listener {
+class PlayerLogin: Listener {
 
 	@EventHandler
 	fun onPlayerJoin(event: PlayerJoinEvent) {
@@ -18,7 +18,7 @@ class Test: Listener {
 
 	@EventHandler
 	fun onPlayerQuit(event: PlayerQuitEvent) {
-		event.quitMessage = String.format("§7[§6-§7]§r %s", event.player.displayName)
+		event.quitMessage = String.format("§7[§c-§7]§r %s", event.player.displayName)
 		if(event.player.name == "eagleeye77000"){
 			Bukkit.getPluginManager().callEvent(AdminLeaveEvent(event.player.name))
 		}

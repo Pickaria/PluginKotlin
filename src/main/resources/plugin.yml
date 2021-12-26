@@ -3,7 +3,7 @@ version: 1.0
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul
-depend: [Vault, Votifier]
+depend: [Vault, Votifier, LangUtils]
 loadbefore: [Towny]
 
 commands:

@@ -16,6 +16,7 @@ repositories {
 
     maven("https://jitpack.io")
     maven("https://dl.bintray.com/nuvotifier/maven/")
+    maven("https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/")
 }
 
 dependencies {
@@ -28,6 +29,7 @@ dependencies {
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")
+    compileOnly("com.meowj:LangUtils:1.9")
 }
 
 tasks.withType<KotlinCompile>{
