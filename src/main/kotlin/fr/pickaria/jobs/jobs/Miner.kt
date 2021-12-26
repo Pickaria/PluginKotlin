@@ -6,6 +6,7 @@ import fr.pickaria.jobs.JobEnum
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 
@@ -33,9 +34,9 @@ class Miner: Listener {
 		Material.NETHER_GOLD_ORE
 	)
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(e: BlockBreakEvent) {
-		if (JobController.getJob(e.player.uniqueId)?.job == JobEnum.MINER.name) {
+		if (!JobController.hasJob(e.player.uniqueId, JobEnum.MINER)) {
 			if (materials.contains(e.block.type)) {
 				// check if player is using silk touch
 				val itemInHand = e.player.inventory.itemInMainHand

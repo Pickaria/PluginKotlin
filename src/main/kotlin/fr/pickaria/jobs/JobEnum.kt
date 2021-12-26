@@ -1,9 +1,9 @@
 package fr.pickaria.jobs
 
-enum class JobEnum {
-	NONE,
-	MINER,
-	HUNTER,
-	FARMER,
-	BREEDER,
+enum class JobEnum(val label: String) {
+	NONE("Chômeur"),
+	MINER("Mineur"),
+	HUNTER("Chasseur"),
+	FARMER("Fermier"),
+	BREEDER("Éleveur");
 }
