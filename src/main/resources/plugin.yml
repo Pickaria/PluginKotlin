@@ -3,7 +3,7 @@ version: 1.0
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul
-depend: [Vault]
+depend: [Vault, Votifier]
 loadbefore: [Towny]
 
 commands:
@@ -19,3 +19,6 @@ commands:
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]
+  vote:
+    description: Affiche la liste des sites de votes
+    usage: /vote

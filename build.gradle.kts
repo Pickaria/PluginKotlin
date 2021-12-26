@@ -15,6 +15,7 @@ repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://jitpack.io")
+    maven("https://dl.bintray.com/nuvotifier/maven/")
 }
 
 dependencies {
@@ -28,6 +29,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
+    compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")
 }
 
 tasks.withType<KotlinCompile>{

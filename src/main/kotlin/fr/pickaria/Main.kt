@@ -3,6 +3,8 @@ package fr.pickaria
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
+import fr.pickaria.vote.VoteCommand
+import fr.pickaria.vote.VoteListener
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -42,6 +44,9 @@ class Main: JavaPlugin() {
 		getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("baltop")?.setExecutor(BaltopCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+		server.pluginManager.registerEvents(VoteListener(), this)
+		getCommand("vote")?.setExecutor(VoteCommand(this)) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 
 		economy = PickariaEconomy()
 		Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
