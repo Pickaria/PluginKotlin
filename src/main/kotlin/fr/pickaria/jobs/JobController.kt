@@ -17,6 +17,9 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
@@ -111,6 +114,34 @@ class JobController(plugin: Main) {
 				JobErrorEnum.JOB_LEFT
 			} else {
 				JobErrorEnum.UNKNOWN
+			}
+		}
+
+		fun getExperienceFromLevel(level: Int): Int {
+			return ((level.toDouble().pow(2.0) + level) / 2).toInt()
+		}
+
+		fun getLevelFromExperience(experience: Int): Int {
+			return floor(0.5 * (sqrt(8.0 * experience + 1.0) - 1)).toInt()
+		}
+
+		fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
+			return try {
+				val job = Main.database.job.find {
+					(it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active
+				}!!
+				val previousLevel = getLevelFromExperience(job.level)
+				job.level += exp
+				job.flushChanges()
+				if (getLevelFromExperience(job.level + exp) > previousLevel) {
+					println(previousLevel)
+					println(getLevelFromExperience(job.level + exp))
+					JobErrorEnum.NEW_LEVEL
+				} else {
+					JobErrorEnum.NOTHING
+				}
+			} catch (_: java.lang.NullPointerException) {
+				JobErrorEnum.NOT_EXERCICE
 			}
 		}
 	}

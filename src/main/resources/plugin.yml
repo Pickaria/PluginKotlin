@@ -18,7 +18,7 @@ commands:
     usage: /pay <joueur> <montant>
   job:
     description: Rejoindre ou quitter un métier
-    usage: /job <join|leave> <métier>
+    usage: /job <join|leave|top> <métier>
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]

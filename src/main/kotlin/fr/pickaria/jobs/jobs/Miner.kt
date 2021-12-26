@@ -3,6 +3,7 @@ package fr.pickaria.jobs.jobs
 import fr.pickaria.coins.Coin.Companion.dropCoin
 import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
+import fr.pickaria.jobs.JobErrorEnum
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.event.EventHandler
@@ -36,12 +37,16 @@ class Miner: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(e: BlockBreakEvent) {
-		if (JobController.hasJob(e.player.uniqueId, JobEnum.MINER)) {
+		val player = e.player
+		if (JobController.hasJob(player.uniqueId, JobEnum.MINER)) {
 			if (materials.contains(e.block.type)) {
 				// check if player is using silk touch
-				val itemInHand = e.player.inventory.itemInMainHand
+				val itemInHand = player.inventory.itemInMainHand
 				if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && e.block.getDrops(itemInHand).isNotEmpty()) {
 					dropCoin(e.block.location, 1.0)
+					if (JobController.addExperience(player.uniqueId, JobEnum.MINER, 1) == JobErrorEnum.NEW_LEVEL) {
+						player.sendMessage("§7Vous avez monté de niveau dans le métier ${JobEnum.MINER.label}")
+					}
 				}
 			}
 		}
