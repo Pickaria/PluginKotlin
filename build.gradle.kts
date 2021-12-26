@@ -15,6 +15,7 @@ repositories {
     mavenLocal()
 
     maven("https://jitpack.io")
+    maven("https://dl.bintray.com/nuvotifier/maven/")
 }
 
 dependencies {
@@ -26,6 +27,7 @@ dependencies {
     compileOnly("org.spigotmc:spigot:1.18-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
+    compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")
 }
 
 tasks.withType<KotlinCompile>{
