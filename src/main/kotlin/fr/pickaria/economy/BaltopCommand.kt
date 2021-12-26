@@ -12,7 +12,7 @@ import org.ktorm.dsl.*
 class BaltopCommand: CommandExecutor {
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		val page = try {
-			args[0].toInt()
+			args[0].toInt() - 1
 		} catch (_: ArrayIndexOutOfBoundsException) {
 			0
 		}
@@ -20,11 +20,12 @@ class BaltopCommand: CommandExecutor {
 		val component = TextComponent("§6==== Baltop : ====")
 		val server = getServer()
 
-		Main.database
+		val sql = Main.database
 			.from(EconomyModel)
 			.select()
 			.orderBy(EconomyModel.balance.desc())
-			.limit(0, page * 10)
+			.limit(page * 10, 10)
+			.where { EconomyModel.balance greater 0.0 }
 			.forEach {
 				val uuid = it[EconomyModel.playerUniqueId]
 				val balance = it[EconomyModel.balance]
