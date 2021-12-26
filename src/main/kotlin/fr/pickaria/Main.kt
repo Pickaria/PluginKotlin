@@ -10,6 +10,11 @@ import fr.pickaria.vote.VoteCommand
 import fr.pickaria.vote.VoteListener
 import fr.pickaria.enchant.Anvil
 import fr.pickaria.spawners.CollectSpawner
+import fr.pickaria.tablist.playerList
+import net.milkbowl.vault.chat.Chat
+import fr.pickaria.tablist.ChatFormat
+import fr.pickaria.tablist.Motd
+import fr.pickaria.tablist.PlayerJoin
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -25,6 +30,7 @@ class Main: JavaPlugin() {
 	companion object {
 		lateinit var database: Database
 		lateinit var economy: PickariaEconomy
+		lateinit var chat: Chat
 	}
 
 	override fun onEnable() {
@@ -48,24 +54,38 @@ class Main: JavaPlugin() {
 		JobController(this)
 
 		server.pluginManager.registerEvents(Coin(), this)
-		server.pluginManager.registerEvents(PlayerLogin(), this)
-		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+		// Player list
+		setupChat()
+		server.pluginManager.registerEvents(PlayerJoin(), this)
+		server.pluginManager.registerEvents(ChatFormat(), this)
+		server.pluginManager.registerEvents(Motd(), this)
+		playerList(this)
+
+		// Economy
+		economy = PickariaEconomy()
+		Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
 		getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("job")?.setExecutor(JobCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		getCommand("baltop")?.setExecutor(BaltopCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 
+		// Votes
 		server.pluginManager.registerEvents(VoteListener(), this)
 		getCommand("vote")?.setExecutor(VoteCommand(this)) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+		// Spawners
 		server.pluginManager.registerEvents(Anvil(), this)
 		server.pluginManager.registerEvents(CollectSpawner(), this)
 
 		server.logger.log(Level.INFO, "Pickaria plugin enabled")
+	}
 
-		economy = PickariaEconomy()
-		Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
-
-		server.logger.log(Level.INFO, "Pickaria plugin enabled")
+	private fun setupChat() {
+		val rsp = server.servicesManager.getRegistration(
+			Chat::class.java
+		)
+		chat = rsp!!.provider
 	}
 
 	override fun onDisable() {

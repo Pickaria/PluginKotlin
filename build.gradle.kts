@@ -14,9 +14,10 @@ repositories {
     mavenCentral()
     mavenLocal()
 
-    maven("https://jitpack.io")
-    maven("https://dl.bintray.com/nuvotifier/maven/")
-    maven("https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/")
+    maven("https://repo.dmulloy2.net/repository/public/") // protocol lib
+    maven("https://jitpack.io") // vault
+    maven("https://dl.bintray.com/nuvotifier/maven/") // votifier
+    maven("https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/") // langutils
 }
 
 dependencies {
@@ -30,6 +31,7 @@ dependencies {
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")
     compileOnly("com.meowj:LangUtils:1.9")
+    compileOnly("com.comphenix.protocol:ProtocolLib:4.7.0")
 }
 
 tasks.withType<KotlinCompile>{
