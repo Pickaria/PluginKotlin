@@ -2,6 +2,7 @@ package fr.pickaria.economy
 
 import fr.pickaria.Main
 import net.milkbowl.vault.economy.EconomyResponse
+import org.bukkit.Bukkit.getLogger
 import org.bukkit.Bukkit.getServer
 import org.bukkit.Color
 import org.bukkit.command.Command
@@ -44,21 +45,28 @@ class PayCommand : CommandExecutor, TabCompleter {
 				return true
 			}
 
-			val withdrawResponse = Main.economy.withdrawPlayer(sender, amount)
+			if (Main.economy.has(sender, amount)) {
+				val withdrawResponse = Main.economy.withdrawPlayer(sender, amount)
 
-			if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
-				val depositResponse = Main.economy.depositPlayer(recipient, withdrawResponse.amount)
+				if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
+					val depositResponse = Main.economy.depositPlayer(recipient, withdrawResponse.amount)
 
-				if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
-					sender.sendMessage("§cLe destinataire n'a pas pu recevoir l'argent.")
-					Main.economy.depositPlayer(sender, withdrawResponse.amount)
+					if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
+						sender.sendMessage("§cLe destinataire n'a pas pu recevoir l'argent.")
+
+						// Try to refund
+						if (Main.economy.depositPlayer(sender, withdrawResponse.amount).type == EconomyResponse.ResponseType.FAILURE) {
+							getLogger().severe("Can't refund player, withdrawed amount: ${withdrawResponse.amount}")
+							sender.sendMessage("§4Une erreur est survenue lors du remboursement, contactez un administrateur.")
+						}
+					} else {
+						sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}§7.")
+					}
 				} else {
-					sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}.")
+					sender.sendMessage("§cUne erreur est survenue lors de la transaction.")
 				}
-			} else if (withdrawResponse.errorMessage == EconomyErrorMessages.NOT_ENOUGH_MONEY.name) {
-				sender.sendMessage("§cVous n'avez pas assez d'argent.")
 			} else {
-				sender.sendMessage("§cUne erreur est survenue lors de la transaction.")
+				sender.sendMessage("§cVous n'avez pas assez d'argent.")
 			}
 		}
 
