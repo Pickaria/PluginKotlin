@@ -82,9 +82,6 @@ class PickariaEconomy : AbstractEconomy() {
 
 	override fun withdrawPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
 		val balance = getBalance(player)
-		if (balance < amount) {
-			return EconomyResponse(amount, 0.0, ResponseType.FAILURE, EconomyErrorMessages.NOT_ENOUGH_MONEY.name)
-		}
 
 		val rows = Main.database.update(EconomyModel) {
 			set(it.balance, it.balance - amount)
