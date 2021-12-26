@@ -8,13 +8,16 @@ import net.minecraft.nbt.NBTTagByte
 import net.minecraft.nbt.NBTTagDouble
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.Sound
 import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityPickupItemEvent
 import org.bukkit.event.entity.ItemMergeEvent
+import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.inventory.ItemStack
+import java.lang.NullPointerException
 
 
 class Coin: Listener {
@@ -43,8 +46,12 @@ class Coin: Listener {
 		private fun getCoinValue(itemStack: ItemStack): Double {
 			val coin = CraftItemStack.asNMSCopy(itemStack)
 			val compound = coin.t()
-			val tag = compound.c("value") as NBTTagDouble // Get tag
-			return tag.i() // Get Double
+			return try {
+				val tag = compound.c("value")!! as NBTTagDouble // Get tag
+				tag.i() // Get Double
+			} catch (_: NullPointerException) {
+				0.0
+			}
 		}
 
 		private fun setCoinValue(itemStack: ItemStack, amount: Double): ItemStack {
@@ -58,8 +65,12 @@ class Coin: Listener {
 		private fun isCoin(itemStack: ItemStack): Boolean {
 			val coin = CraftItemStack.asNMSCopy(itemStack)
 			val compound = coin.t()
-			val tag = compound.c("isCoin") as NBTTagByte // Get tag
-			return tag.h() == (1).toByte() // Is equals to 1
+			return try {
+				val tag = compound.c("isCoin")!! as NBTTagByte // Get tag
+				tag.h() == (1).toByte() // Is equals to 1
+			} catch (_: NullPointerException) {
+				false
+			}
 		}
 	}
 
@@ -79,6 +90,7 @@ class Coin: Listener {
 
 				if (response.type == EconomyResponse.ResponseType.SUCCESS) {
 					player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent("§6+ ${Main.economy.format(response.amount)}"))
+					player.playSound(player.location, Sound.ITEM_ARMOR_EQUIP_CHAIN, 1f, 1f)
 					e.item.remove()
 				}
 			}
@@ -105,5 +117,10 @@ class Coin: Listener {
 			event.target.customName = Main.economy.format(amount1 + amount2)
 			event.entity.remove()
 		}
+	}
+
+	@EventHandler
+	fun onInventoryPickupItem(event: InventoryPickupItemEvent) {
+		if (isCoin(event.item.itemStack)) event.isCancelled = true
 	}
 }
