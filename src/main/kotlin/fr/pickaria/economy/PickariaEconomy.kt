@@ -53,6 +53,9 @@ class PickariaEconomy : AbstractEconomy() {
 	}
 
 	override fun getBalance(player: OfflinePlayer): Double {
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
+		}
 		return Main.database.economy.find { it.playerUniqueId eq player.uniqueId }?.balance ?: 0.0
 	}
 
@@ -81,6 +84,10 @@ class PickariaEconomy : AbstractEconomy() {
 	}
 
 	override fun withdrawPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
+		}
+
 		val balance = getBalance(player)
 
 		val rows = Main.database.update(EconomyModel) {
@@ -108,6 +115,10 @@ class PickariaEconomy : AbstractEconomy() {
 	}
 
 	override fun depositPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
+		}
+
 		val balance = getBalance(player)
 
 		val rows = Main.database.update(EconomyModel) {
