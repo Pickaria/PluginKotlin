@@ -40,7 +40,7 @@ fun playerList(plugin: Main) {
 
 				val gameProfile = WrappedGameProfile(it.uniqueId, it.name)
 				val newInfoData = PlayerInfoData(gameProfile, it.ping, gameMode, displayName)
-				playerList[index] = newInfoData
+				playerList.add(newInfoData)
 			}
 
 			packet.playerInfoDataLists.write(0, playerList)
