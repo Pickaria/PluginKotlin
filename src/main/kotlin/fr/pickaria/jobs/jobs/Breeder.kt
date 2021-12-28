@@ -16,5 +16,6 @@ class Breeder: Listener {
 		if (!JobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
 		Coin.dropCoin(event.entity.location, 1.0)
+		JobController.addExperience(player.uniqueId, JobEnum.BREEDER, 1)
 	}
 }

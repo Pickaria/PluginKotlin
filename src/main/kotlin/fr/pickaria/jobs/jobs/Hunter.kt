@@ -36,12 +36,12 @@ class Hunter: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onEntityDeath(event: EntityDeathEvent) {
+		spawnerMobs.remove(event.entity.uniqueId)
 		if (!isHostile(event.entity) || fromSpawner(event.entity)) return
 		val player = event.entity.killer ?: return
 		if (!JobController.hasJob(player.uniqueId, JobEnum.HUNTER)) return
 
-		Coin.dropCoin(event.entity.location, 1.0)
-
-		spawnerMobs.remove(event.entity.uniqueId)
+		Coin.dropCoin(event.entity.location)
+		JobController.addExperience(player.uniqueId, JobEnum.HUNTER, 1)
 	}
 }

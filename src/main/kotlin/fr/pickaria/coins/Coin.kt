@@ -17,10 +17,18 @@ import org.bukkit.event.entity.EntityPickupItemEvent
 import org.bukkit.event.entity.ItemMergeEvent
 import org.bukkit.event.inventory.InventoryPickupItemEvent
 import org.bukkit.inventory.ItemStack
+import kotlin.random.Random
 
 
 class Coin: Listener {
 	companion object {
+		fun dropCoin(location: Location) {
+			val amount = Random.nextDouble(1.0, 4.0)
+			val item = location.world?.dropItemNaturally(location, createCoin(amount)) ?: return println("Error")
+			item.customName = Main.economy.format(amount)
+			item.isCustomNameVisible = true
+		}
+
 		fun dropCoin(location: Location, amount: Double) {
 			val item = location.world?.dropItemNaturally(location, createCoin(amount)) ?: return println("Error")
 			item.customName = Main.economy.format(amount)

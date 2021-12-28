@@ -3,7 +3,6 @@ package fr.pickaria.jobs.jobs
 import fr.pickaria.coins.Coin.Companion.dropCoin
 import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
-import fr.pickaria.jobs.JobErrorEnum
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.event.EventHandler
@@ -12,42 +11,41 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 
 class Miner: Listener {
-	private val materials = listOf(
-		Material.COAL_ORE,
-		Material.COPPER_ORE,
-		Material.IRON_ORE,
-		Material.GOLD_ORE,
-		Material.DIAMOND_ORE,
-		Material.EMERALD_ORE,
-		Material.REDSTONE_ORE,
-		Material.LAPIS_ORE,
+	private val materials = mapOf(
+		Material.COAL_ORE to 1.0,
+		Material.COPPER_ORE to 1.0,
+		Material.IRON_ORE to 1.0,
+		Material.GOLD_ORE to 1.0,
+		Material.DIAMOND_ORE to 1.0,
+		Material.EMERALD_ORE to 1.0,
+		Material.REDSTONE_ORE to 1.0,
+		Material.LAPIS_ORE to 1.0,
 
-		Material.DEEPSLATE_COAL_ORE,
-		Material.DEEPSLATE_COPPER_ORE,
-		Material.DEEPSLATE_IRON_ORE,
-		Material.DEEPSLATE_GOLD_ORE,
-		Material.DEEPSLATE_DIAMOND_ORE,
-		Material.DEEPSLATE_EMERALD_ORE,
-		Material.DEEPSLATE_REDSTONE_ORE,
-		Material.DEEPSLATE_LAPIS_ORE,
+		Material.DEEPSLATE_COAL_ORE to 1.0,
+		Material.DEEPSLATE_COPPER_ORE to 1.0,
+		Material.DEEPSLATE_IRON_ORE to 1.0,
+		Material.DEEPSLATE_GOLD_ORE to 1.0,
+		Material.DEEPSLATE_DIAMOND_ORE to 1.0,
+		Material.DEEPSLATE_EMERALD_ORE to 1.0,
+		Material.DEEPSLATE_REDSTONE_ORE to 1.0,
+		Material.DEEPSLATE_LAPIS_ORE to 1.0,
 
-		Material.NETHER_QUARTZ_ORE,
-		Material.NETHER_GOLD_ORE
+		Material.NETHER_QUARTZ_ORE to 1.0,
+		Material.NETHER_GOLD_ORE to 1.0,
 	)
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	fun onBlockBreak(e: BlockBreakEvent) {
-		val player = e.player
-		if (JobController.hasJob(player.uniqueId, JobEnum.MINER)) {
-			if (materials.contains(e.block.type)) {
-				// check if player is using silk touch
-				val itemInHand = player.inventory.itemInMainHand
-				if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && e.block.getDrops(itemInHand).isNotEmpty()) {
-					dropCoin(e.block.location, 1.0)
-					if (JobController.addExperience(player.uniqueId, JobEnum.MINER, 1) == JobErrorEnum.NEW_LEVEL) {
-						player.sendMessage("§7Vous avez monté de niveau dans le métier ${JobEnum.MINER.label}")
-					}
-				}
+	fun onBlockBreak(event: BlockBreakEvent) {
+		val player = event.player
+		if (!JobController.hasJob(player.uniqueId, JobEnum.MINER)) return
+
+		val material = event.block.type
+		if (materials.containsKey(material)) {
+			// check if player is using silk touch
+			val itemInHand = player.inventory.itemInMainHand
+			if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && event.block.getDrops(itemInHand).isNotEmpty()) {
+				dropCoin(event.block.location)
+				JobController.addExperience(player.uniqueId, JobEnum.MINER, 1)
 			}
 		}
 	}

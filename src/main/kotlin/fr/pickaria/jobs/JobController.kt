@@ -43,7 +43,7 @@ class JobController(plugin: Main) {
 			}
 
 			return try {
-				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) }!!
+				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active }!!
 				playerJobs[playerUuid] = JobEnum.valueOf(job.job) // Save in cache
 				job.active
 			} catch (_: NullPointerException) {
