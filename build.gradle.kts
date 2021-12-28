@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.dsl.Coroutines
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
@@ -36,6 +37,10 @@ dependencies {
 
 tasks.withType<KotlinCompile>{
     kotlinOptions.jvmTarget = "17"
+}
+
+kotlin {
+    experimental.coroutines = Coroutines.ENABLE
 }
 
 tasks.withType<ShadowJar>{

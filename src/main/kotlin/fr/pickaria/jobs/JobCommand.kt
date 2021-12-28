@@ -1,14 +1,31 @@
 package fr.pickaria.jobs
 
+import fr.pickaria.Main
+import fr.pickaria.model.EconomyModel
+import fr.pickaria.model.JobModel
+import net.md_5.bungee.api.chat.TextComponent
+import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import org.ktorm.dsl.*
 
 class JobCommand : CommandExecutor, TabCompleter {
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		if (sender is Player) {
+			if (args.isEmpty()) {
+				val jobs = JobController.getJobs(sender.uniqueId).map { JobEnum.valueOf(it.job).label.lowercase() }
+				val message = if (jobs.isEmpty()) {
+					 "§cVous n'exercez actuellement pas de métier."
+				} else {
+					"§7Vous exercez le(s) métier(s) : ${jobs.joinToString(", ")}."
+				}
+				sender.sendMessage(message)
+				return true
+			}
+
 			if (args.size != 2) {
 				sender.sendMessage("§cVeuillez entrer l'action et le nom du métier.")
 				return false
@@ -50,6 +67,25 @@ class JobCommand : CommandExecutor, TabCompleter {
 						JobErrorEnum.UNKNOWN -> sender.sendMessage("§cUne erreur inconnue est survenue.")
 					}
 				}
+				"top" -> {
+					val component = TextComponent("§6==== Top ${job.label} : ====")
+					val server = Bukkit.getServer()
+
+					Main.database
+						.from(JobModel)
+						.select()
+						.orderBy(JobModel.level.desc())
+						.where { JobModel.job eq job.name }
+						.limit(0, 10)
+						.forEach {
+							val uuid = it[JobModel.playerUniqueId]
+							val level = it[JobModel.level]
+							val player = server.getOfflinePlayer(uuid!!)
+							component.addExtra("\n§6${it.row} : §7${player.name} - ${level!!}")
+						}
+
+					sender.spigot().sendMessage(component)
+				}
 			}
 		}
 
@@ -63,7 +99,7 @@ class JobCommand : CommandExecutor, TabCompleter {
 		args: Array<out String>
 	): MutableList<String> {
 		return when (args.size) {
-			1 -> mutableListOf("join", "leave")
+			1 -> mutableListOf("join", "leave", "top")
 			2 -> JobEnum.values().map { it.name.lowercase() }.toMutableList()
 			else -> mutableListOf()
 		}
