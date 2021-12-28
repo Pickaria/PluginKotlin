@@ -1,27 +1,29 @@
-name: Pickaria
-version: 1.0
+name: PickariaKotlin
+version: 1.1
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul
 depend: [Vault, Votifier, LangUtils, ProtocolLib]
-loadbefore: [Towny]
+loadbefore: [Towny, Essentials]
 
 commands:
-  lol:
-    description: Pour rire
-    usage: /<command>
   money:
     description: Voir son solde bancaire
     usage: /money
+    permission: pickaria.command.money
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>
+    permission: pickaria.command.pay
   job:
     description: Rejoindre ou quitter un métier
     usage: /job <join|leave|top> <métier>
+    permission: pickaria.command.job
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]
+    permission: pickaria.command.baltop
   vote:
     description: Affiche la liste des sites de votes
     usage: /vote
+    permission: pickaria.command.vote

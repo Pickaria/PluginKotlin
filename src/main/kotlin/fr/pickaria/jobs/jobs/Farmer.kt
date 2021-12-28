@@ -20,16 +20,15 @@ class Farmer : Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(event: BlockBreakEvent) {
+		val material = event.block.type
+		if (!materials.containsKey(material)) return
+
 		if (!JobController.hasJob(event.player.uniqueId, JobEnum.FARMER)) return
 
-		val material = event.block.type
-		println(material)
-		if (materials.containsKey(material)) {
-			val blockData = event.block.blockData as Ageable
-			if (blockData.age == blockData.maximumAge) {
-				Coin.dropCoin(event.block.location)
-				JobController.addExperience(event.player.uniqueId, JobEnum.FARMER, 1)
-			}
+		val blockData = event.block.blockData as Ageable
+		if (blockData.age == blockData.maximumAge) {
+			Coin.dropCoin(event.block.location)
+			JobController.addExperience(event.player.uniqueId, JobEnum.FARMER, 1)
 		}
 	}
 

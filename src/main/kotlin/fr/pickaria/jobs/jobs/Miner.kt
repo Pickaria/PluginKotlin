@@ -36,17 +36,17 @@ class Miner: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(event: BlockBreakEvent) {
+		val material = event.block.type
+		if (!materials.containsKey(material)) return
+
 		val player = event.player
 		if (!JobController.hasJob(player.uniqueId, JobEnum.MINER)) return
 
-		val material = event.block.type
-		if (materials.containsKey(material)) {
-			// check if player is using silk touch
-			val itemInHand = player.inventory.itemInMainHand
-			if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && event.block.getDrops(itemInHand).isNotEmpty()) {
-				dropCoin(event.block.location)
-				JobController.addExperience(player.uniqueId, JobEnum.MINER, 1)
-			}
+		// check if player is using silk touch
+		val itemInHand = player.inventory.itemInMainHand
+		if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && event.block.getDrops(itemInHand).isNotEmpty()) {
+			dropCoin(event.block.location)
+			JobController.addExperience(player.uniqueId, JobEnum.MINER, 1)
 		}
 	}
 }

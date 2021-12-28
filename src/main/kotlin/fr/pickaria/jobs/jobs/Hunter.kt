@@ -38,6 +38,7 @@ class Hunter: Listener {
 	fun onEntityDeath(event: EntityDeathEvent) {
 		spawnerMobs.remove(event.entity.uniqueId)
 		if (!isHostile(event.entity) || fromSpawner(event.entity)) return
+
 		val player = event.entity.killer ?: return
 		if (!JobController.hasJob(player.uniqueId, JobEnum.HUNTER)) return
 
