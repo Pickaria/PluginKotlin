@@ -1,41 +1,21 @@
 package fr.pickaria.economy
 
 import fr.pickaria.Main
+import fr.pickaria.model.EconomyModel
+import fr.pickaria.model.economy
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
 import org.bukkit.Bukkit.getServer
 import org.bukkit.OfflinePlayer
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Statement
+import org.ktorm.dsl.*
+import org.ktorm.entity.add
+import org.ktorm.entity.find
 import java.text.DecimalFormat
+import fr.pickaria.model.Economy
 
 
-class Economy : AbstractEconomy() {
-
-	fun executeSQL(sql: String): Boolean {
-		return try {
-			val st: Statement = Main.connection.createStatement()
-			return (st.executeUpdate(sql) > 0).also {
-				st.close()
-			}
-		} catch (e: SQLException) {
-			e.printStackTrace()
-			false
-		}
-	}
-
-	fun executeSelect(sql: String): ResultSet? {
-		return try {
-			val st: Statement = Main.connection.createStatement()
-			st.executeQuery(sql)
-		} catch (e: SQLException) {
-			e.printStackTrace()
-			null
-		}
-	}
-
+class PickariaEconomy : AbstractEconomy() {
 	override fun isEnabled() = true
 
 	override fun getName() = "Pickaria economy"
@@ -44,9 +24,9 @@ class Economy : AbstractEconomy() {
 
 	override fun format(amount: Double): String {
 		return if (amount <= 1.0) {
-			"${DecimalFormat("#.##").format(amount)} ${currencyNameSingular()}"
+			"${DecimalFormat("0.00").format(amount)} ${currencyNameSingular()}"
 		} else {
-			"${DecimalFormat("#.##").format(amount)} ${currencyNamePlural()}"
+			"${DecimalFormat("0.00").format(amount)} ${currencyNamePlural()}"
 		}
 	}
 
@@ -54,10 +34,17 @@ class Economy : AbstractEconomy() {
 
 	override fun currencyNameSingular() = "$"
 
+	override fun hasAccount(player: OfflinePlayer): Boolean {
+		return Main.database
+			.from(EconomyModel)
+			.select()
+			.where { EconomyModel.playerUniqueId eq player.uniqueId }
+			.totalRecords > 0
+	}
+
 	override fun hasAccount(playerName: String?): Boolean {
 		return playerName?.let {
-			val player = getServer().getOfflinePlayer(playerName)
-			return executeSelect("SELECT balance FROM economy WHERE player_uuid =  ${player.uniqueId}")?.next() ?: false
+			hasAccount(getServer().getOfflinePlayer(playerName))
 		} ?: false
 	}
 
@@ -66,16 +53,10 @@ class Economy : AbstractEconomy() {
 	}
 
 	override fun getBalance(player: OfflinePlayer): Double {
-		return executeSelect("SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")?.let { rs ->
-			if (rs.next()) {
-				rs.getDouble("balance")
-			} else {
-				createPlayerAccount(player)
-				0.0
-			}
-		} ?: run {
-			-1.0
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
 		}
+		return Main.database.economy.find { it.playerUniqueId eq player.uniqueId }?.balance ?: 0.0
 	}
 
 	override fun getBalance(playerName: String?): Double {
@@ -88,15 +69,13 @@ class Economy : AbstractEconomy() {
 		return getBalance(playerName)
 	}
 
+	override fun has(player: OfflinePlayer, amount: Double): Boolean {
+		return getBalance(player) >= amount
+	}
+
 	override fun has(playerName: String?, amount: Double): Boolean {
-		playerName ?: return false
-		val player = getServer().getOfflinePlayer(playerName)
-		return executeSelect("SELECT balance FROM economy WHERE player_uuid = '${player.uniqueId}'")?.let {
-			if (it.next()) {
-				it.getDouble("balance") >= amount
-			} else {
-				false
-			}
+		return playerName?.let {
+			has(getServer().getOfflinePlayer(playerName), amount)
 		} ?: false
 	}
 
@@ -105,17 +84,24 @@ class Economy : AbstractEconomy() {
 	}
 
 	override fun withdrawPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
-		val balance = getBalance(player)
-
-		if (balance - amount < 0) {
-			return EconomyResponse(amount, balance, ResponseType.FAILURE, "Not enough money")
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
 		}
 
-		if (executeSQL("UPDATE economy SET balance = ${balance - amount} WHERE player_uuid = '${player.uniqueId}'")) {
+		val balance = getBalance(player)
+
+		val rows = Main.database.update(EconomyModel) {
+			set(it.balance, it.balance - amount)
+			where {
+				it.playerUniqueId eq player.uniqueId
+			}
+		}
+
+		if (rows > 0) {
 			return EconomyResponse(amount, balance, ResponseType.SUCCESS, "")
 		}
 
-		return EconomyResponse(amount, balance, ResponseType.FAILURE, "")
+		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
 	}
 
 	override fun withdrawPlayer(playerName: String?, amount: Double): EconomyResponse {
@@ -129,13 +115,24 @@ class Economy : AbstractEconomy() {
 	}
 
 	override fun depositPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
+		}
+
 		val balance = getBalance(player)
 
-		if (executeSQL("UPDATE economy SET balance = ${balance + amount} WHERE player_uuid = '${player.uniqueId}'")) {
+		val rows = Main.database.update(EconomyModel) {
+			set(it.balance, it.balance + amount)
+			where {
+				it.playerUniqueId eq player.uniqueId
+			}
+		}
+
+		if (rows > 0) {
 			return EconomyResponse(amount, balance, ResponseType.SUCCESS, "")
 		}
 
-		return EconomyResponse(amount, balance, ResponseType.FAILURE, "")
+		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
 	}
 
 	override fun depositPlayer(playerName: String?, amount: Double): EconomyResponse {
@@ -149,7 +146,12 @@ class Economy : AbstractEconomy() {
 	}
 
 	override fun createPlayerAccount(player: OfflinePlayer): Boolean {
-		return executeSQL("INSERT INTO economy(player_uuid) VALUES ('${player.uniqueId}')")
+		val account = Economy {
+			playerUniqueId = player.uniqueId
+			balance = 0.0
+		}
+
+		return Main.database.economy.add(account) > 0
 	}
 
 	override fun createPlayerAccount(playerName: String?): Boolean {

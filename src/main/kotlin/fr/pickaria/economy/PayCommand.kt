@@ -2,6 +2,7 @@ package fr.pickaria.economy
 
 import fr.pickaria.Main
 import net.milkbowl.vault.economy.EconomyResponse
+import org.bukkit.Bukkit.getLogger
 import org.bukkit.Bukkit.getServer
 import org.bukkit.Color
 import org.bukkit.command.Command
@@ -39,8 +40,8 @@ class PayCommand : CommandExecutor, TabCompleter {
 				return false
 			}
 
-			if (amount <= 0) {
-				sender.sendMessage("§cLe montant doit être suppérieur à 0.")
+			if (amount <= 0.01) {
+				sender.sendMessage("§cLe montant doit être suppérieure à 0.01.")
 				return true
 			}
 
@@ -52,10 +53,22 @@ class PayCommand : CommandExecutor, TabCompleter {
 
 					if (depositResponse.type != EconomyResponse.ResponseType.SUCCESS) {
 						sender.sendMessage("§cLe destinataire n'a pas pu recevoir l'argent.")
-						Main.economy.depositPlayer(sender, withdrawResponse.amount)
+
+						// Try to refund
+						if (Main.economy.depositPlayer(sender, withdrawResponse.amount).type == EconomyResponse.ResponseType.FAILURE) {
+							getLogger().severe("Can't refund player, withdrawed amount: ${withdrawResponse.amount}")
+							sender.sendMessage("§4Une erreur est survenue lors du remboursement, contactez un administrateur.")
+						}
 					} else {
-						sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}.")
+						val format = Main.economy.format(depositResponse.amount)
+						sender.sendMessage("§7Le destinataire a bien reçu §6${format}§7.")
+
+						if (recipient.isOnline) {
+							(recipient as Player).sendMessage("§6${sender.name} §7vous a envoyé §6${format}§7.")
+						}
 					}
+				} else {
+					sender.sendMessage("§cUne erreur est survenue lors de la transaction.")
 				}
 			} else {
 				sender.sendMessage("§cVous n'avez pas assez d'argent.")

@@ -1,19 +1,22 @@
-name: Pickaria
-version: 1.0
+name: PickariaKotlin
+version: 1.1
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul, Alina
-softdepend: [Vault]
+depend: [Vault]
+loadbefore: [Towny]
+
 commands:
-  lol:
-    description: Pour rire
-    usage: /<command>
   money:
     description: Voir son solde bancaire
     usage: /money
+    permission: pickaria.command.money
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>
   tprandom:
     description: Vous téléporte aléatoirement sur la carte
     usage: /tprandom
+  baltop:
+    description: Affiche la liste des joueurs les plus riches
+    usage: /baltop [page]
