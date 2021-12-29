@@ -1,7 +1,6 @@
 package fr.pickaria.randomtp
 
 import fr.pickaria.Main
-import fr.pickaria.TELEPORT_COOLDOWN
 import fr.pickaria.cooldownTeleport
 import net.milkbowl.vault.economy.EconomyResponse
 import org.bukkit.Location
@@ -10,7 +9,6 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.scheduler.BukkitRunnable
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.HashMap

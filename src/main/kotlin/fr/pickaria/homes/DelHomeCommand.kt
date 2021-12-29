@@ -1,17 +1,11 @@
 package fr.pickaria.homes
 
-import fr.pickaria.Main
-import fr.pickaria.model.home
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
-import org.ktorm.dsl.and
-import org.ktorm.dsl.eq
-import org.ktorm.entity.filter
-import org.ktorm.entity.find
-import org.ktorm.entity.map
+
 
 class DelHomeCommand : CommandExecutor, TabCompleter {
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -22,14 +16,10 @@ class DelHomeCommand : CommandExecutor, TabCompleter {
 				SetHomeCommand.NAME
 			}
 
-			try {
-				val home = Main.database.home
-					.find { (it.name eq homeName) and (it.playerUniqueId eq sender.uniqueId) }!!
-
-				home.delete()
-				sender.sendMessage("§7Point de téléportation supprimé.")
-			} catch (_: NullPointerException) {
-				sender.sendMessage("§cLe point d'apparition n'existe pas.")
+			if (HomeController.removeHomeFromCache(sender.uniqueId, homeName)) {
+				sender.sendMessage("§7Ce point de téléportation a été supprimé.")
+			} else {
+				sender.sendMessage("§cCe point de téléportation n'existe pas.")
 			}
 		}
 		return true
@@ -41,9 +31,6 @@ class DelHomeCommand : CommandExecutor, TabCompleter {
 		alias: String,
 		args: Array<out String>
 	): MutableList<String> {
-		return Main.database.home
-			.filter { it.playerUniqueId eq (sender as Player).uniqueId }
-			.map { it.name }
-			.toMutableList()
+		return HomeController.getHomeNames((sender as Player).uniqueId).toMutableList()
 	}
 }

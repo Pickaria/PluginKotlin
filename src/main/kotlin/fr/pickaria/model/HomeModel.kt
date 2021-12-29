@@ -14,6 +14,7 @@ interface Home : Entity<Home> {
 
 	var playerUniqueId: UUID
 	var name: String
+	var world: UUID?
 	var x: Int
 	var y: Int
 	var z: Int
@@ -22,6 +23,7 @@ interface Home : Entity<Home> {
 object HomeModel : Table<Home>("home") {
 	val playerUniqueId = uuid("player_uuid").primaryKey().bindTo { it.playerUniqueId }
 	val name = varchar("name").bindTo { it.name }
+	val world = uuid("world").bindTo { it.world }
 	val x = int("location_x").bindTo { it.x }
 	val y = int("location_y").bindTo { it.y }
 	val z = int("location_z").bindTo { it.z }

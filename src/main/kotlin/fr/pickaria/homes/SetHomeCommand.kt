@@ -1,17 +1,10 @@
 package fr.pickaria.homes
 
-import fr.pickaria.Main
-import fr.pickaria.model.Home
-import fr.pickaria.model.home
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
-import org.ktorm.entity.add
-import org.ktorm.entity.update
-import java.sql.SQLException
-import kotlin.math.ceil
 
 class SetHomeCommand : CommandExecutor, TabCompleter {
 	companion object {
@@ -22,8 +15,8 @@ class SetHomeCommand : CommandExecutor, TabCompleter {
 		if (sender is Player) {
 			val location = sender.location
 
-			if (!location.block.type.isAir) {
-				sender.sendMessage("§cCe point de teleportation n'est pas sécurisé, vous ne pouvez pas créer un point de té.")
+			if (location.block.type.isOccluding) {
+				sender.sendMessage("§cCe point de teleportation n'est pas sécurisé, vous ne pouvez pas créer un point ici.")
 				return true
 			}
 
@@ -33,23 +26,10 @@ class SetHomeCommand : CommandExecutor, TabCompleter {
 				NAME
 			}
 
-			val home = Home {
-				playerUniqueId = sender.uniqueId
-				name = homeName
-				x = location.x.toInt()
-				y = ceil(location.y).toInt()
-				z = location.z.toInt()
-			}
-
-			try {
-				if (Main.database.home.add(home) > 0) {
-					sender.sendMessage("§7Point de téléportation créé.")
-				} else {
-					sender.sendMessage("§cLe point d'apparition n'a pas pu être créé.")
-				}
-			} catch (_: SQLException) {
-				Main.database.home.update(home)
-				sender.sendMessage("§7Point de téléportation mis à jour.")
+			if (HomeController.addHomeToCache(sender.uniqueId, homeName, location)) {
+				sender.sendMessage("§7Point de téléportation créé.")
+			} else {
+				sender.sendMessage("§cLe point d'apparition n'a pas pu être créé.")
 			}
 		}
 
