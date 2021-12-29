@@ -17,10 +17,8 @@ import java.util.logging.Level
 
 class Main: JavaPlugin() {
 	companion object {
-		lateinit var connection: Connection
-		lateinit var economy: PickariaEconomy
-		lateinit var database: Database
 		lateinit var economy: Economy
+		lateinit var database: Database
 	}
 
 	override fun onEnable() {
