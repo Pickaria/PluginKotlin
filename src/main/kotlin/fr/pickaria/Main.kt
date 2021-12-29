@@ -19,10 +19,13 @@ class Main: JavaPlugin() {
 	companion object {
 		lateinit var economy: Economy
 		lateinit var database: Database
+		lateinit var plugin: Main
 	}
 
 	override fun onEnable() {
 		super.onEnable()
+
+		plugin = this
 
 		saveDefaultConfig()
 
