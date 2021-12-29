@@ -12,21 +12,23 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    maven("https://papermc.io/repo/repository/maven-public/")
+    mavenLocal()
     maven("https://jitpack.io")
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
+
+    // Database
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("org.ktorm:ktorm-core:3.4.1")
     implementation("org.ktorm:ktorm-support-postgresql:3.4.1")
 
-    compileOnly("org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT")
-    //compileOnly("org.spigotmc:spigot:1.18-R0.1-SNAPSHOT")
+    // Caching
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
 
-    compileOnly("io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot:1.18.1-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
 }

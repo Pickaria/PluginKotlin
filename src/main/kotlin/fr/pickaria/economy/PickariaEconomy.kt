@@ -1,6 +1,9 @@
 package fr.pickaria.economy
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import fr.pickaria.Main
+import fr.pickaria.model.Economy
 import fr.pickaria.model.EconomyModel
 import fr.pickaria.model.economy
 import net.milkbowl.vault.economy.AbstractEconomy
@@ -12,10 +15,16 @@ import org.ktorm.dsl.*
 import org.ktorm.entity.add
 import org.ktorm.entity.find
 import java.text.DecimalFormat
-import fr.pickaria.model.Economy
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class PickariaEconomy : AbstractEconomy() {
+	private var cache: Cache<UUID, Double> = Caffeine.newBuilder()
+		.expireAfterWrite(10, TimeUnit.MINUTES)
+		.maximumSize(200)
+		.build()
+
 	override fun isEnabled() = true
 
 	override fun getName() = "Pickaria economy"
@@ -35,11 +44,11 @@ class PickariaEconomy : AbstractEconomy() {
 	override fun currencyNameSingular() = "$"
 
 	override fun hasAccount(player: OfflinePlayer): Boolean {
-		return Main.database
-			.from(EconomyModel)
-			.select()
-			.where { EconomyModel.playerUniqueId eq player.uniqueId }
-			.totalRecords > 0
+		return if (cache.getIfPresent(player.uniqueId) != null) {
+			true
+		} else {
+			Main.database.economy.find { it.playerUniqueId eq player.uniqueId } != null
+		}
 	}
 
 	override fun hasAccount(playerName: String?): Boolean {
@@ -56,7 +65,15 @@ class PickariaEconomy : AbstractEconomy() {
 		if (!hasAccount(player)) {
 			createPlayerAccount(player)
 		}
-		return Main.database.economy.find { it.playerUniqueId eq player.uniqueId }?.balance ?: 0.0
+
+		val value = cache.getIfPresent(player.uniqueId)
+		return if (value != null) {
+			value
+		} else {
+			val res = Main.database.economy.find { it.playerUniqueId eq player.uniqueId }?.balance ?: 0.0
+			cache.put(player.uniqueId, res)
+			res
+		}
 	}
 
 	override fun getBalance(playerName: String?): Double {
@@ -98,7 +115,8 @@ class PickariaEconomy : AbstractEconomy() {
 		}
 
 		if (rows > 0) {
-			return EconomyResponse(amount, balance, ResponseType.SUCCESS, "")
+			cache.put(player.uniqueId, balance - amount)
+			return EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
 		}
 
 		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
@@ -129,7 +147,8 @@ class PickariaEconomy : AbstractEconomy() {
 		}
 
 		if (rows > 0) {
-			return EconomyResponse(amount, balance, ResponseType.SUCCESS, "")
+			cache.put(player.uniqueId, balance + amount)
+			return EconomyResponse(amount, balance + amount, ResponseType.SUCCESS, "")
 		}
 
 		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
@@ -146,12 +165,19 @@ class PickariaEconomy : AbstractEconomy() {
 	}
 
 	override fun createPlayerAccount(player: OfflinePlayer): Boolean {
+		if (!player.isOnline) return false
+
 		val account = Economy {
 			playerUniqueId = player.uniqueId
 			balance = 0.0
 		}
 
-		return Main.database.economy.add(account) > 0
+		return if (Main.database.economy.add(account) > 0) {
+			cache.put(player.uniqueId, 0.0)
+			true
+		} else {
+			false
+		}
 	}
 
 	override fun createPlayerAccount(playerName: String?): Boolean {

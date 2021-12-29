@@ -32,7 +32,8 @@ class BaltopCommand : CommandExecutor {
 		val max = (min + PAGE_SIZE - 1).coerceAtMost(players.size - 1)
 		val component = TextComponent("§6==== Baltop (${page + 1}/${players.size / PAGE_SIZE + 1}) ====")
 
-		players.map { Pair(it.name, Main.economy.getBalance(it)) }
+		players.filter { Main.economy.hasAccount(it) }
+			.map { Pair(it.name, Main.economy.getBalance(it)) }
 			.sortedByDescending { it.second }
 			.slice(min..max)
 			.forEachIndexed { index, it ->
