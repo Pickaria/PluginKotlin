@@ -5,6 +5,9 @@ import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
 import fr.pickaria.randomtp.RandomCommand
 import fr.pickaria.economy.PickariaEconomy
+import fr.pickaria.homes.DelHomeCommand
+import fr.pickaria.homes.HomeCommand
+import fr.pickaria.homes.SetHomeCommand
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -51,6 +54,11 @@ class Main: JavaPlugin() {
 
 			// Teleport commands
 			getCommand("tprandom")?.setExecutor(RandomCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+			// Home
+			getCommand("sethome")?.setExecutor(SetHomeCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("home")?.setExecutor(HomeCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("delhome")?.setExecutor(DelHomeCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		}
 
 		server.logger.log(Level.INFO, "Pickaria plugin enabled")

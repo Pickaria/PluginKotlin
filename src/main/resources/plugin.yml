@@ -20,3 +20,12 @@ commands:
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]
+  sethome:
+    description: Créé un point de téléportation
+    usage: /sethome [home]
+  home:
+    description: Vous téléporte à un point de téléportation
+    usage: /home [home]
+  delhome:
+    description: Supprime un point de téléportation
+    usage: /delhome [home]
