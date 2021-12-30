@@ -1,5 +1,5 @@
-name: Pickaria
-version: 1.0
+name: PickariaKotlin
+version: 1.1
 api-version: 1.18
 main: fr.pickaria.Main
 author: Macaron, Quozul
@@ -7,12 +7,10 @@ depend: [Vault]
 loadbefore: [Towny]
 
 commands:
-  lol:
-    description: Pour rire
-    usage: /<command>
   money:
     description: Voir son solde bancaire
     usage: /money
+    permission: pickaria.command.money
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>

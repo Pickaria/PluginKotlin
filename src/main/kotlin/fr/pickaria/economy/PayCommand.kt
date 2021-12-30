@@ -60,7 +60,12 @@ class PayCommand : CommandExecutor, TabCompleter {
 							sender.sendMessage("§4Une erreur est survenue lors du remboursement, contactez un administrateur.")
 						}
 					} else {
-						sender.sendMessage("§7Le destinataire a bien reçu §6${Main.economy.format(depositResponse.amount)}§7.")
+						val format = Main.economy.format(depositResponse.amount)
+						sender.sendMessage("§7Le destinataire a bien reçu §6${format}§7.")
+
+						if (recipient.isOnline) {
+							(recipient as Player).sendMessage("§6${sender.name} §7vous a envoyé §6${format}§7.")
+						}
 					}
 				} else {
 					sender.sendMessage("§cUne erreur est survenue lors de la transaction.")
