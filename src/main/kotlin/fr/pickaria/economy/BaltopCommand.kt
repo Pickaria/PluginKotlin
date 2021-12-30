@@ -12,6 +12,7 @@ import org.ktorm.dsl.*
 class BaltopCommand : CommandExecutor {
 	companion object {
 		const val PAGE_SIZE = 8
+		val server = getServer()
 	}
 
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -29,15 +30,20 @@ class BaltopCommand : CommandExecutor {
 			return true
 		}
 
-		val max = (min + PAGE_SIZE - 1).coerceAtMost(players.size - 1)
+		//val max = (min + PAGE_SIZE - 1).coerceAtMost(players.size - 1)
 		val component = TextComponent("§6==== Baltop (${page + 1}/${players.size / PAGE_SIZE + 1}) ====")
 
-		players.filter { Main.economy.hasAccount(it) }
-			.map { Pair(it.name, Main.economy.getBalance(it)) }
-			.sortedByDescending { it.second }
-			.slice(min..max)
-			.forEachIndexed { index, it ->
-				component.addExtra("\n§f${index + 1 + min}. §7${it.first}, ${Main.economy.format(it.second)}")
+		Main.database
+			.from(EconomyModel)
+			.select()
+			.orderBy(EconomyModel.balance.desc())
+			.limit(min, 8)
+			.where { EconomyModel.balance greater 0.0 }
+			.forEach {
+				val uuid = it[EconomyModel.playerUniqueId]
+				val balance = it[EconomyModel.balance]
+				val player = server.getOfflinePlayer(uuid!!)
+				component.addExtra("\n§6${it.row} : §7${player.name} - ${Main.economy.format(balance!!)}")
 			}
 
 		component.addExtra("\n§7Tapez §6/baltop ${page + 2}§7 pour lire la page suivante.")

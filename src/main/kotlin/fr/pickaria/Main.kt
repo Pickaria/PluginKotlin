@@ -71,6 +71,7 @@ class Main: JavaPlugin() {
 		if (rsp == null) {
 			economy = PickariaEconomy()
 			Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
+			server.pluginManager.registerEvents(economy as PickariaEconomy, this)
 
 			server.logger.log(Level.INFO, "Pickaria is handling economy")
 		} else {

@@ -8,6 +8,7 @@ import fr.pickaria.jobs.jobs.Miner
 import fr.pickaria.model.Job
 import fr.pickaria.model.job
 import org.bukkit.Bukkit.getServer
+import org.bukkit.event.Listener
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.sql.SQLException
@@ -23,8 +24,10 @@ import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
-class JobController(plugin: Main) {
+class JobController(plugin: Main): Listener {
 	init {
+		getServer().pluginManager.registerEvents(this, plugin)
+
 		getServer().pluginManager.registerEvents(Miner(), plugin)
 		getServer().pluginManager.registerEvents(Hunter(), plugin)
 		getServer().pluginManager.registerEvents(Farmer(), plugin)
@@ -32,19 +35,39 @@ class JobController(plugin: Main) {
 	}
 
 	companion object {
-		private val playerJobs = HashMap<UUID, JobEnum>()
+		private val playerJobs: MutableMap<UUID, MutableMap<JobEnum, Job>> = mutableMapOf()
 		const val MAX_JOBS = 1
 		const val COOLDOWN = 24L
 
+		fun getJob(playerUuid: UUID, jobName: JobEnum): Job {
+			return try {
+				playerJobs[playerUuid]!![jobName]!!
+			} catch (_: NullPointerException) {
+				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active }!!
+				val jobEnum = JobEnum.valueOf(job.job)
+
+				playerJobs[playerUuid] = mutableMapOf(Pair(jobEnum, job))
+
+				job
+			}
+		}
+
 		fun hasJob(playerUuid: UUID, jobName: JobEnum): Boolean {
 			if (playerJobs.contains(playerUuid)) {
-				if (playerJobs[playerUuid] == jobName) return true // Get from cache
+				if (playerJobs[playerUuid]?.containsKey(jobName) == true) return true // Get from cache
 				return false
 			}
 
 			return try {
 				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active }!!
-				playerJobs[playerUuid] = JobEnum.valueOf(job.job) // Save in cache
+				val jobEnum = JobEnum.valueOf(job.job)
+
+				try {
+					playerJobs[playerUuid]!![jobEnum] = job // Save in cache
+				} catch (_: NullPointerException) {
+					playerJobs[playerUuid] = mutableMapOf(Pair(jobEnum, job))
+				}
+
 				job.active
 			} catch (_: NullPointerException) {
 				false
@@ -86,7 +109,11 @@ class JobController(plugin: Main) {
 			// 	  on conflict (player_uuid, job) do update set active = true, last_used = now()
 			// }
 
-			playerJobs.remove(playerUuid) // Invalidate cache
+			try {
+				playerJobs[playerUuid]!![jobName] = job // Save in cache
+			} catch (_: NullPointerException) {
+				playerJobs[playerUuid] = mutableMapOf(Pair(jobName, job))
+			}
 
 			return try {
 				Main.database.job.add(job) > 0
@@ -108,7 +135,11 @@ class JobController(plugin: Main) {
 			job.active = false
 			job.level = (job.level * 0.8).toInt()
 
-			playerJobs.remove(playerUuid) // Invalidate cache
+			try {
+				playerJobs[playerUuid]!!.remove(jobName) // Save in cache
+			} catch (_: NullPointerException) {
+				playerJobs[playerUuid] = mutableMapOf()
+			}
 
 			return if (job.flushChanges() > 0) {
 				JobErrorEnum.JOB_LEFT
@@ -127,15 +158,13 @@ class JobController(plugin: Main) {
 
 		fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
 			return try {
-				val job = Main.database.job.find {
-					(it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active
-				}!!
+				val job = getJob(playerUuid, jobName)
 				val previousLevel = getLevelFromExperience(job.level)
 				job.level += exp
-				job.flushChanges()
-				if (getLevelFromExperience(job.level + exp) > previousLevel) {
+
+				if (getLevelFromExperience(job.level) > previousLevel) {
 					println(previousLevel)
-					println(getLevelFromExperience(job.level + exp))
+					println(getLevelFromExperience(job.level))
 					JobErrorEnum.NEW_LEVEL
 				} else {
 					JobErrorEnum.NOTHING

@@ -20,6 +20,8 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt")
+
     // Database
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("org.ktorm:ktorm-core:3.4.1")
