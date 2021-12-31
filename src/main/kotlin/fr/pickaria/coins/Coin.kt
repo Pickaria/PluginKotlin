@@ -23,10 +23,12 @@ import kotlin.random.Random
 class Coin: Listener {
 	companion object {
 		fun dropCoin(location: Location) {
-			val amount = Random.nextDouble(1.0, 4.0)
-			val item = location.world?.dropItemNaturally(location, createCoin(amount)) ?: return println("Error")
-			item.customName = Main.economy.format(amount)
-			item.isCustomNameVisible = true
+			dropCoin(location, 1.0, 4.0)
+		}
+
+		fun dropCoin(location: Location, min: Double, max: Double) {
+			val amount = Random.nextDouble(min, max)
+			dropCoin(location, amount)
 		}
 
 		fun dropCoin(location: Location, amount: Double) {

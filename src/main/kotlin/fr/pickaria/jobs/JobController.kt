@@ -1,10 +1,7 @@
 package fr.pickaria.jobs
 
 import fr.pickaria.Main
-import fr.pickaria.jobs.jobs.Breeder
-import fr.pickaria.jobs.jobs.Farmer
-import fr.pickaria.jobs.jobs.Hunter
-import fr.pickaria.jobs.jobs.Miner
+import fr.pickaria.jobs.jobs.*
 import fr.pickaria.model.Job
 import fr.pickaria.model.job
 import org.bukkit.Bukkit.getServer
@@ -17,7 +14,6 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -32,6 +28,7 @@ class JobController(plugin: Main): Listener {
 		getServer().pluginManager.registerEvents(Hunter(), plugin)
 		getServer().pluginManager.registerEvents(Farmer(), plugin)
 		getServer().pluginManager.registerEvents(Breeder(), plugin)
+		getServer().pluginManager.registerEvents(Alchemist(), plugin)
 	}
 
 	companion object {
