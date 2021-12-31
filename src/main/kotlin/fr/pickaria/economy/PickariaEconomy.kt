@@ -18,6 +18,8 @@ import org.ktorm.entity.find
 import java.text.DecimalFormat
 import java.util.*
 import kotlinx.coroutines.*
+import org.bukkit.Bukkit.getLogger
+import java.sql.SQLException
 
 
 class PickariaEconomy : AbstractEconomy(), Listener {
@@ -42,6 +44,27 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onPlayerQuit(event: PlayerQuitEvent) {
 		cache[event.player.uniqueId]?.asyncFlushChanges()
+	}
+
+	fun flushAllAccounts() {
+		getLogger().fine("Flushing all economy accounts...")
+		var flushed = 0
+
+		cache.forEach { (uuid, account) ->
+			run {
+				try {
+					getLogger().fine("Flushed $uuid account")
+					account.flushChanges()
+					cache.remove(uuid)
+					flushed++
+				} catch (err: SQLException) {
+					err.printStackTrace()
+					getLogger().severe("Cannot flush account of $uuid, balance: ${account.balance}")
+				}
+			}
+		}
+
+		getLogger().fine("Flushed $flushed economy accounts!")
 	}
 
 	private fun getFromCache(uniqueId: UUID): Economy? {

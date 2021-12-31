@@ -13,6 +13,10 @@ import org.bukkit.entity.Player
 import org.ktorm.dsl.*
 
 class JobCommand : CommandExecutor, TabCompleter {
+	companion object {
+		val SUB_COMMANDS = listOf("join", "leave", "top")
+	}
+
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		if (sender is Player) {
 			if (args.isEmpty()) {
@@ -65,6 +69,7 @@ class JobCommand : CommandExecutor, TabCompleter {
 						}
 						JobErrorEnum.JOB_LEFT -> sender.sendMessage("§7Vous avez quitté le métier de ${job.label}.")
 						JobErrorEnum.UNKNOWN -> sender.sendMessage("§cUne erreur inconnue est survenue.")
+						else -> sender.sendMessage("§cUne erreur inconnue est survenue, c'était innatendu.")
 					}
 				}
 				"top" -> {
@@ -99,7 +104,7 @@ class JobCommand : CommandExecutor, TabCompleter {
 		args: Array<out String>
 	): MutableList<String> {
 		return when (args.size) {
-			1 -> listOf("join", "leave", "top").filter { it.startsWith(args[0]) }.toMutableList()
+			1 -> SUB_COMMANDS.filter { it.startsWith(args[0]) }.toMutableList()
 			2 -> JobEnum.values().map { it.name.lowercase() }.filter { it.startsWith(args[1]) }.toMutableList()
 			else -> mutableListOf()
 		}

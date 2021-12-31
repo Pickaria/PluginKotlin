@@ -42,6 +42,6 @@ class Hunter: Listener {
 		if (!JobController.hasJob(player.uniqueId, JobEnum.HUNTER)) return
 
 		Coin.dropCoin(event.entity.location)
-		JobController.addExperience(player.uniqueId, JobEnum.HUNTER, 1)
+		JobController.addExperienceAndAnnounce(player, JobEnum.HUNTER, 1)
 	}
 }

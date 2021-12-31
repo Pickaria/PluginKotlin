@@ -5,6 +5,7 @@ import fr.pickaria.jobs.jobs.*
 import fr.pickaria.model.Job
 import fr.pickaria.model.job
 import org.bukkit.Bukkit.getServer
+import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
@@ -161,8 +162,6 @@ class JobController(plugin: Main): Listener {
 				job.level += exp
 
 				if (getLevelFromExperience(job.level) > previousLevel) {
-					println(previousLevel)
-					println(getLevelFromExperience(job.level))
 					JobErrorEnum.NEW_LEVEL
 				} else {
 					JobErrorEnum.NOTHING
@@ -170,6 +169,17 @@ class JobController(plugin: Main): Listener {
 			} catch (_: java.lang.NullPointerException) {
 				JobErrorEnum.NOT_EXERCICE
 			}
+		}
+
+		fun addExperienceAndAnnounce(player: Player, jobName: JobEnum, exp: Int): JobErrorEnum {
+			val res = addExperience(player.uniqueId, jobName, exp);
+
+			if (res == JobErrorEnum.NEW_LEVEL) {
+				val job = getJob(player.uniqueId, jobName)
+				player.sendMessage("§7Vous montez niveau §6${getLevelFromExperience(job.level)}§7 dans le métier §6${jobName.label}§7.")
+			}
+
+			return res
 		}
 	}
 }

@@ -28,7 +28,7 @@ class Farmer : Listener {
 			val blockData = event.block.blockData as Ageable
 			if (blockData.age == blockData.maximumAge) {
 				Coin.dropCoin(event.block.location)
-				JobController.addExperience(event.player.uniqueId, JobEnum.FARMER, 1)
+				JobController.addExperienceAndAnnounce(event.player, JobEnum.FARMER, 1)
 			}
 		}
 	}

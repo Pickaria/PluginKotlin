@@ -45,8 +45,7 @@ class Miner: Listener {
 			val itemInHand = player.inventory.itemInMainHand
 			if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && event.block.getDrops(itemInHand).isNotEmpty()) {
 				dropCoin(event.block.location)
-				val response = JobController.addExperience(player.uniqueId, JobEnum.MINER, 1)
-				player.sendMessage(response.toString())
+				JobController.addExperienceAndAnnounce(player, JobEnum.MINER, 1)
 			}
 		}
 	}

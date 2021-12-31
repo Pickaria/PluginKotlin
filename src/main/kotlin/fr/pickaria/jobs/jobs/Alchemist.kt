@@ -3,8 +3,10 @@ package fr.pickaria.jobs.jobs
 import fr.pickaria.coins.Coin
 import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
+import org.bukkit.Bukkit.getServer
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -50,10 +52,10 @@ class Alchemist: Listener {
 		if (uniqueId == null || !JobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
 
 		event.results.forEach {
-			println(it)
 			if (isPotion(it)) {
 				Coin.dropCoin(location, 1.0, 2.0)
-				JobController.addExperience(uniqueId, JobEnum.ALCHEMIST, 1)
+				val player = getServer().getOfflinePlayer(uniqueId) as Player
+				JobController.addExperienceAndAnnounce(player, JobEnum.ALCHEMIST, 1)
 			}
 		}
 	}

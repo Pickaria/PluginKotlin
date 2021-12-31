@@ -39,11 +39,12 @@ class BaltopCommand : CommandExecutor {
 			.orderBy(EconomyModel.balance.desc())
 			.limit(min, 8)
 			.where { EconomyModel.balance greater 0.0 }
-			.forEach {
+			.forEachIndexed {
+				index, it ->
 				val uuid = it[EconomyModel.playerUniqueId]
-				val balance = it[EconomyModel.balance]
+				val balance = it[EconomyModel.balance]!!
 				val player = server.getOfflinePlayer(uuid!!)
-				component.addExtra("\n§6${it.row} : §7${player.name} - ${Main.economy.format(balance!!)}")
+				component.addExtra("\n§f${index + 1 + min}. §7${player.name}, ${Main.economy.format(balance)}")
 			}
 
 		component.addExtra("\n§7Tapez §6/baltop ${page + 2}§7 pour lire la page suivante.")

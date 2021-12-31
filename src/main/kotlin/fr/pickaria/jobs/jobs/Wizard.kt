@@ -14,6 +14,6 @@ class Wizard: Listener {
 		if (!JobController.hasJob(uniqueId, JobEnum.WIZARD)) return
 
 		Coin.dropCoin(event.enchantBlock.location, 1.0, (event.expLevelCost / 10.0).coerceAtLeast(1.5))
-		JobController.addExperience(uniqueId, JobEnum.WIZARD, 1)
+		JobController.addExperienceAndAnnounce(event.enchanter, JobEnum.WIZARD, 1)
 	}
 }

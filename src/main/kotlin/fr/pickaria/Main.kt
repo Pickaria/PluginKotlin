@@ -39,30 +39,31 @@ class Main: JavaPlugin() {
 			database = Database.connect(url, user = user, password = password, dialect = PostgreSqlDialect())
 		} catch (e: SQLException) {
 			e.printStackTrace()
+			server.logger.severe("An error occurred while trying to connect to the database, some features may not function properly")
 		}
 
 		server.pluginManager.registerEvents(Test(), this)
-		getCommand("lol")?.setExecutor(Command()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+		getCommand("lol")?.setExecutor(Command()) ?: server.logger.warning("Command could not be registered")
 
 		// Economy
 		if (setupEconomy()) {
 			// Economy commands
-			getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
-			getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
-			getCommand("baltop")?.setExecutor(BaltopCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.warning("Command could not be registered")
+			getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.warning("Command could not be registered")
+			getCommand("baltop")?.setExecutor(BaltopCommand()) ?: server.logger.warning("Command could not be registered")
 
 			// Jobs
 			JobController(this)
-			getCommand("job")?.setExecutor(JobCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("job")?.setExecutor(JobCommand()) ?: server.logger.warning("Command could not be registered")
 			server.pluginManager.registerEvents(Coin(), this)
 		}
 
-		server.logger.log(Level.INFO, "Pickaria plugin enabled")
+		server.logger.info("Pickaria plugin enabled")
 	}
 
 	private fun setupEconomy(): Boolean {
 		if (server.pluginManager.getPlugin("Vault") == null) {
-			server.logger.log(Level.WARNING, "VaultAPI not found, economy is not available")
+			logger.warning("VaultAPI not found, economy is not available")
 			return false
 		}
 		val rsp = server.servicesManager.getRegistration(
@@ -73,16 +74,22 @@ class Main: JavaPlugin() {
 			Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
 			server.pluginManager.registerEvents(economy as PickariaEconomy, this)
 
-			server.logger.log(Level.INFO, "Pickaria is handling economy")
+			logger.info("Pickaria is handling economy")
 		} else {
 			economy = rsp.provider
-			server.logger.log(Level.INFO, "Third party plugin is handling economy")
+			logger.info("Third party plugin is handling economy")
 		}
 		return true
 	}
 
 	override fun onDisable() {
 		super.onDisable()
-		server.logger.log(Level.INFO, "Pickaria plugin disabled")
+
+		if (economy is PickariaEconomy) {
+			logger.info("Pickaria is handling economy, flushing accounts...")
+			(economy as PickariaEconomy).flushAllAccounts()
+		}
+
+		logger.log(Level.INFO, "Pickaria plugin disabled")
 	}
 }
