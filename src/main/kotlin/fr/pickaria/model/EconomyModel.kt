@@ -1,5 +1,8 @@
 package fr.pickaria.model
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.ktorm.database.Database
 import org.ktorm.entity.*
 import org.ktorm.schema.*
@@ -10,6 +13,12 @@ interface Economy : Entity<Economy> {
 
 	var playerUniqueId: UUID
 	var balance: Double
+
+	fun asyncFlushChanges() {
+		CoroutineScope(Dispatchers.Default).launch {
+			flushChanges()
+		}
+	}
 }
 
 object EconomyModel : Table<Economy>("economy") {

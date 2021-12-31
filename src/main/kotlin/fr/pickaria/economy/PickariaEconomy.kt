@@ -2,7 +2,6 @@ package fr.pickaria.economy
 
 import fr.pickaria.Main
 import fr.pickaria.model.Economy
-import fr.pickaria.model.EconomyModel
 import fr.pickaria.model.economy
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
@@ -15,7 +14,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.ktorm.dsl.*
-import org.ktorm.entity.add
 import org.ktorm.entity.find
 import java.text.DecimalFormat
 import java.util.*
@@ -30,18 +28,32 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 	// Event handlers
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onPlayerJoin(event: PlayerJoinEvent) {
-		// TODO: Read player data
-		CoroutineScope(Dispatchers.Default).launch{
-			//Main.
+		CoroutineScope(Dispatchers.Default).launch {
+			try {
+				val uniqueId = event.player.uniqueId
+				val eco = Main.database.economy.find { it.playerUniqueId eq uniqueId }!!
+				cache[uniqueId] = eco
+			} catch (_: NullPointerException) {
+				// Create account ?
+			}
 		}
-
-		// TODO: Store player data in the cache
-
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onPlayerQuit(event: PlayerQuitEvent) {
-		// Save player data
+		cache[event.player.uniqueId]?.asyncFlushChanges()
+	}
+
+	private fun getFromCache(uniqueId: UUID): Economy? {
+		return try {
+			cache[uniqueId]!!
+		} catch (_: NullPointerException) {
+			val eco = Main.database.economy.find { it.playerUniqueId eq uniqueId }!!
+			cache[uniqueId] = eco
+			return eco
+		} catch (_: NullPointerException) {
+			null
+		}
 	}
 
 	// Constants methods
@@ -65,7 +77,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 	// Logic methods
 
 	override fun hasAccount(player: OfflinePlayer): Boolean {
-		return Main.database.economy.find { it.playerUniqueId eq player.uniqueId } != null
+		return getFromCache(player.uniqueId) != null
 	}
 
 	override fun getBalance(player: OfflinePlayer): Double {
@@ -73,7 +85,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 			createPlayerAccount(player)
 		}
 
-		return Main.database.economy.find { it.playerUniqueId eq player.uniqueId }?.balance ?: 0.0
+		return getFromCache(player.uniqueId)?.balance ?: 0.0
 	}
 
 	override fun has(player: OfflinePlayer, amount: Double): Boolean {
@@ -87,18 +99,12 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 
 		val balance = getBalance(player)
 
-		val rows = Main.database.update(EconomyModel) {
-			set(it.balance, it.balance - amount)
-			where {
-				it.playerUniqueId eq player.uniqueId
-			}
+		return try {
+			getFromCache(player.uniqueId)!!.balance -= amount
+			EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
+		} catch (_: NullPointerException) {
+			EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
 		}
-
-		if (rows > 0) {
-			return EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
-		}
-
-		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
 	}
 
 	override fun depositPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
@@ -108,19 +114,12 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 
 		val balance = getBalance(player)
 
-		val rows = Main.database.update(EconomyModel) {
-			set(it.balance, it.balance + amount)
-			where {
-				it.playerUniqueId eq player.uniqueId
-			}
+		return try {
+			getFromCache(player.uniqueId)!!.balance += amount
+			EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
+		} catch (_: NullPointerException) {
+			EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
 		}
-
-		if (rows > 0) {
-			//cache.put(player.uniqueId, balance + amount)
-			return EconomyResponse(amount, balance + amount, ResponseType.SUCCESS, "")
-		}
-
-		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
 	}
 
 	override fun createPlayerAccount(player: OfflinePlayer): Boolean {
@@ -131,7 +130,9 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 			balance = 0.0
 		}
 
-		return Main.database.economy.add(account) > 0
+		cache[player.uniqueId] = account
+
+		return true
 	}
 
 	// Compatibility methods
