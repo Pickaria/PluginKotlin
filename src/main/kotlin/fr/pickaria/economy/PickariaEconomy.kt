@@ -32,7 +32,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 			try {
 				val uniqueId = event.player.uniqueId
 				val eco = Main.database.economy.find { it.playerUniqueId eq uniqueId }!!
-				cache[uniqueId] = eco
+				cache.putIfAbsent(uniqueId, eco)
 			} catch (_: NullPointerException) {
 				// Create account ?
 			}
@@ -50,7 +50,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		} catch (_: NullPointerException) {
 			val eco = Main.database.economy.find { it.playerUniqueId eq uniqueId }!!
 			cache[uniqueId] = eco
-			return eco
+			eco
 		} catch (_: NullPointerException) {
 			null
 		}
@@ -100,7 +100,13 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		val balance = getBalance(player)
 
 		return try {
-			getFromCache(player.uniqueId)!!.balance -= amount
+			val account = getFromCache(player.uniqueId)!!
+			account.balance -= amount
+
+			if (!player.isOnline) {
+				account.asyncFlushChanges()
+			}
+
 			EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
 		} catch (_: NullPointerException) {
 			EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
@@ -115,7 +121,13 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		val balance = getBalance(player)
 
 		return try {
-			getFromCache(player.uniqueId)!!.balance += amount
+			val account = getFromCache(player.uniqueId)!!
+			account.balance += amount
+
+			if (!player.isOnline) {
+				account.asyncFlushChanges()
+			}
+
 			EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
 		} catch (_: NullPointerException) {
 			EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
@@ -131,6 +143,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		}
 
 		cache[player.uniqueId] = account
+		account.asyncFlushChanges()
 
 		return true
 	}
