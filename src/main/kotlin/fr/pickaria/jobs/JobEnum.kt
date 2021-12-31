@@ -5,5 +5,6 @@ enum class JobEnum(val label: String) {
 	HUNTER("Chasseur"),
 	FARMER("Fermier"),
 	BREEDER("Éleveur"),
-	ALCHEMIST("Alchimiste");
+	ALCHEMIST("Alchimiste"),
+	WIZARD("Enchanteur");
 }

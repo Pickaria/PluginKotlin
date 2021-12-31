@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
@@ -27,10 +26,6 @@ dependencies {
     implementation("org.ktorm:ktorm-core:3.4.1")
     implementation("org.ktorm:ktorm-support-postgresql:3.4.1")
 
-    // Caching
-    implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
-    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
-
     compileOnly("org.spigotmc:spigot:1.18.1-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
@@ -38,10 +33,6 @@ dependencies {
 
 tasks.withType<KotlinCompile>{
     kotlinOptions.jvmTarget = "17"
-}
-
-kotlin {
-    experimental.coroutines = Coroutines.ENABLE
 }
 
 tasks.withType<ShadowJar>{

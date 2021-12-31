@@ -99,8 +99,8 @@ class JobCommand : CommandExecutor, TabCompleter {
 		args: Array<out String>
 	): MutableList<String> {
 		return when (args.size) {
-			1 -> mutableListOf("join", "leave", "top")
-			2 -> JobEnum.values().map { it.name.lowercase() }.toMutableList()
+			1 -> listOf("join", "leave", "top").filter { it.startsWith(args[0]) }.toMutableList()
+			2 -> JobEnum.values().map { it.name.lowercase() }.filter { it.startsWith(args[1]) }.toMutableList()
 			else -> mutableListOf()
 		}
 	}

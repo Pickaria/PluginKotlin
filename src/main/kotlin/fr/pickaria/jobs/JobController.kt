@@ -29,6 +29,7 @@ class JobController(plugin: Main): Listener {
 		getServer().pluginManager.registerEvents(Farmer(), plugin)
 		getServer().pluginManager.registerEvents(Breeder(), plugin)
 		getServer().pluginManager.registerEvents(Alchemist(), plugin)
+		getServer().pluginManager.registerEvents(Wizard(), plugin)
 	}
 
 	companion object {
