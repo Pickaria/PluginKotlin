@@ -20,6 +20,8 @@ class BaltopCommand : CommandExecutor {
 			(args[0].toInt() - 1).coerceAtLeast(0)
 		} catch (_: ArrayIndexOutOfBoundsException) {
 			0
+		} catch (_: NumberFormatException){
+			0
 		}
 
 		val min = page * PAGE_SIZE
