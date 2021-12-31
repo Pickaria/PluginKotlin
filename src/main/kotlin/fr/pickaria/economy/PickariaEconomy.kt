@@ -19,6 +19,7 @@ import java.text.DecimalFormat
 import java.util.*
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit.getLogger
+import org.ktorm.entity.add
 import java.sql.SQLException
 
 
@@ -31,13 +32,10 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onPlayerJoin(event: PlayerJoinEvent) {
 		CoroutineScope(Dispatchers.Default).launch {
-			try {
-				val uniqueId = event.player.uniqueId
-				val eco = Main.database.economy.find { it.playerUniqueId eq uniqueId }!!
-				cache.putIfAbsent(uniqueId, eco)
-			} catch (_: NullPointerException) {
-				// Create account ?
-			}
+			val uniqueId = event.player.uniqueId
+			Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let{
+				cache.putIfAbsent(uniqueId, it)
+			} ?: createPlayerAccount(event.player)
 		}
 	}
 
@@ -67,7 +65,14 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		getLogger().fine("Flushed $flushed economy accounts!")
 	}
 
-	private fun getFromCache(uniqueId: UUID): Economy? {
+	private fun getFromCache(uniqueId: UUID): Economy? =
+		cache[uniqueId] ?:
+		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let{
+			cache[uniqueId] = it
+			it
+		}
+
+	/*private fun getFromCache(uniqueId: UUID): Economy? {
 		return try {
 			cache[uniqueId]!!
 		} catch (_: NullPointerException) {
@@ -77,7 +82,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		} catch (_: NullPointerException) {
 			null
 		}
-	}
+	}*/
 
 	// Constants methods
 
@@ -166,6 +171,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		}
 
 		cache[player.uniqueId] = account
+		Main.database.economy.add(account)
 		account.asyncFlushChanges()
 
 		return true
