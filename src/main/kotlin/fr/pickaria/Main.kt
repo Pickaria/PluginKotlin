@@ -14,7 +14,6 @@ import kotlinx.coroutines.*
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
-import org.bukkit.plugin.java.JavaPlugin
 import org.ktorm.database.Database
 import org.ktorm.entity.Entity
 import org.ktorm.support.postgresql.PostgreSqlDialect
@@ -73,9 +72,9 @@ class Main: SuspendingJavaPlugin() {
 			logger.warning("VaultAPI not found, economy is not available")
 			return false
 		}
-		val rsp = server.servicesManager.getRegistration(
-			Economy::class.java
-		)
+
+		val rsp = server.servicesManager.getRegistration(Economy::class.java)
+
 		if (rsp == null) {
 			economy = PickariaEconomy(this)
 			Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)

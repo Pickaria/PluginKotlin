@@ -4,9 +4,6 @@ import fr.pickaria.Main
 import fr.pickaria.asyncFlushChanges
 import fr.pickaria.model.Economy
 import fr.pickaria.model.economy
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
@@ -24,16 +21,17 @@ import java.text.DecimalFormat
 import java.util.*
 import org.ktorm.entity.add
 import java.sql.SQLException
+import java.util.concurrent.ConcurrentHashMap
 
 
 class PickariaEconomy(plugin: Main) : AbstractEconomy(), Listener {
-	private val cache: MutableMap<UUID, Economy> = mutableMapOf()
+	val cache: ConcurrentHashMap<UUID, Economy> = ConcurrentHashMap()
 	private var enabled: Boolean = false
 
 	init {
 		enabled = true
 
-		// Write cache to data base every 10 minutes
+		// Write cache to database every 10 minutes
 		object : BukkitRunnable() {
 			override fun run() {
 				flushAllAccounts()
@@ -69,7 +67,7 @@ class PickariaEconomy(plugin: Main) : AbstractEconomy(), Listener {
 			run {
 				try {
 					account.flushChanges()
-					if (removeFromCache) {
+					if (removeFromCache || !getServer().getOfflinePlayer(uuid).isOnline) {
 						cache.remove(uuid)
 					}
 					flushed++
