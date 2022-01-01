@@ -20,3 +20,15 @@ commands:
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]
+  tpa:
+    description: Demande de teleportation vers un joueur
+    usage: /tpa <joueur>
+  tpaccept:
+    description: Accepter une demande de teleportation
+    usage: /tpaccept
+  tpdeny:
+    description: Refuser une demande de teleportation
+    usage: /tpdeny
+  tpcancel:
+    description: Annuler une demande de teleportation
+    usage: /tpcancel

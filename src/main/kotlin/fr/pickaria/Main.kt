@@ -5,6 +5,9 @@ import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
 import fr.pickaria.randomtp.RandomCommand
 import fr.pickaria.economy.PickariaEconomy
+import fr.pickaria.tpa.TpaCommand
+import fr.pickaria.tpa.TpdenyCommand
+import fr.pickaria.tpa.TpacceptCommand
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -51,6 +54,10 @@ class Main: JavaPlugin() {
 
 			// Teleport commands
 			getCommand("tprandom")?.setExecutor(RandomCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("tpa")?.setExecutor(TpaCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("tpaccept")?.setExecutor(TpacceptCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("tpdeny")?.setExecutor(TpdenyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
 		}
 
 		server.logger.log(Level.INFO, "Pickaria plugin enabled")
