@@ -7,9 +7,7 @@ import fr.pickaria.economy.PayCommand
 import fr.pickaria.jobs.JobCommand
 import fr.pickaria.jobs.JobController
 import fr.pickaria.economy.PickariaEconomy
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
