@@ -93,6 +93,16 @@ class Main: JavaPlugin() {
 		}
 
 		logger.log(Level.INFO, "Pickaria plugin disabled")
+		Dispatchers.DB.close()
+	}
+}
+
+val Dispatchers.DB: ExecutorCoroutineDispatcher
+	get() = newSingleThreadContext("Database")
+
+fun <T>DBAsync(block: suspend () -> T){
+	CoroutineScope(Dispatchers.DB).launch {
+		block.invoke()
 	}
 }
 
