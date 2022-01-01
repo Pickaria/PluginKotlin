@@ -4,28 +4,23 @@ import fr.pickaria.Main
 import fr.pickaria.asyncFlushChanges
 import fr.pickaria.model.Economy
 import fr.pickaria.model.economy
+import fr.pickaria.utils.Cache
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
 import org.bukkit.Bukkit.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.event.EventHandler
-import org.bukkit.event.EventPriority
-import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.scheduler.BukkitRunnable
 import org.ktorm.dsl.*
 import org.ktorm.entity.find
 import java.text.DecimalFormat
 import java.util.*
 import org.ktorm.entity.add
-import java.sql.SQLException
-import java.util.concurrent.ConcurrentHashMap
 
 
-class PickariaEconomy(plugin: Main) : AbstractEconomy(), Listener {
-	val cache: ConcurrentHashMap<UUID, Economy> = ConcurrentHashMap()
+class PickariaEconomy(plugin: Main) : AbstractEconomy(), Cache<Economy> {
 	private var enabled: Boolean = false
 
 	init {
@@ -34,58 +29,26 @@ class PickariaEconomy(plugin: Main) : AbstractEconomy(), Listener {
 		// Write cache to database every 10 minutes
 		object : BukkitRunnable() {
 			override fun run() {
-				flushAllAccounts()
+				flushAllAccounts { uuid, account ->
+					getLogger().severe("Cannot flush account of $uuid with balance: ${account.balance}")
+				}
 			}
 		}.runTaskTimerAsynchronously(plugin, 12000, 12000 /* 10 minutes */)
 	}
 
 	override fun isEnabled() = enabled
 
-	// Event handlers
-	@EventHandler(priority = EventPriority.MONITOR)
-	suspend fun onPlayerJoin(event: PlayerJoinEvent) {
+	// Cache methods
+	@EventHandler
+	override suspend fun onPlayerJoin(event: PlayerJoinEvent) {
 		val uniqueId = event.player.uniqueId
 		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.also {
 			cache.putIfAbsent(uniqueId, it)
 		} ?: createPlayerAccount(event.player)
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR)
-	suspend fun onPlayerQuit(event: PlayerQuitEvent) {
-		cache[event.player.uniqueId]?.flushChanges()?.let {
-			if (it > 0) {
-				cache.remove(event.player.uniqueId)
-			}
-		}
-	}
-
-	fun flushAllAccounts(removeFromCache: Boolean = false): Int {
-		getLogger().info("Flushing all economy accounts...")
-		var flushed = 0
-
-		cache.forEach { (uuid, account) ->
-			run {
-				try {
-					account.flushChanges()
-					if (removeFromCache || !getServer().getOfflinePlayer(uuid).isOnline) {
-						cache.remove(uuid)
-					}
-					flushed++
-				} catch (err: SQLException) {
-					err.printStackTrace()
-					getLogger().severe("Cannot flush account of $uuid, balance: ${account.balance}")
-				}
-			}
-		}
-
-		getLogger().info("Flushed $flushed economy accounts!")
-
-		return flushed
-	}
-
-	private fun getFromCache(uniqueId: UUID): Economy? =
-		cache[uniqueId] ?:
-		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let {
+	override fun getFromCache(uniqueId: UUID): Economy? =
+		cache[uniqueId] ?: Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let {
 			cache[uniqueId] = it
 			it
 		}
