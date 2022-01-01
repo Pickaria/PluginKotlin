@@ -78,7 +78,7 @@ class Main: SuspendingJavaPlugin() {
 		if (rsp == null) {
 			economy = PickariaEconomy()
 			Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
-			server.pluginManager.registerEvents(economy as PickariaEconomy, this)
+			server.pluginManager.registerSuspendingEvents(economy as PickariaEconomy, this)
 
 			logger.info("Pickaria is handling economy")
 		} else {

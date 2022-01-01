@@ -4,6 +4,8 @@ import fr.pickaria.Main
 import fr.pickaria.asyncFlushChanges
 import fr.pickaria.model.Economy
 import fr.pickaria.model.economy
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
@@ -48,7 +50,7 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 	}
 
 	fun flushAllAccounts() {
-		getLogger().fine("Flushing all economy accounts...")
+		println("Flushing all economy accounts...")
 		var flushed = 0
 
 		cache.forEach { (uuid, account) ->
@@ -74,18 +76,6 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 			cache[uniqueId] = it
 			it
 		}
-
-	/*private fun getFromCache(uniqueId: UUID): Economy? {
-		return try {
-			cache[uniqueId]!!
-		} catch (_: NullPointerException) {
-			val eco = Main.database.economy.find { it.playerUniqueId eq uniqueId }!!
-			cache[uniqueId] = eco
-			eco
-		} catch (_: NullPointerException) {
-			null
-		}
-	}*/
 
 	// Constants methods
 
