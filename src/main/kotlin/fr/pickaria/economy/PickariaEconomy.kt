@@ -1,6 +1,7 @@
 package fr.pickaria.economy
 
 import fr.pickaria.Main
+import fr.pickaria.asyncFlushChanges
 import fr.pickaria.model.Economy
 import fr.pickaria.model.economy
 import net.milkbowl.vault.economy.AbstractEconomy

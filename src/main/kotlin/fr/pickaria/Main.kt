@@ -7,11 +7,15 @@ import fr.pickaria.economy.PayCommand
 import fr.pickaria.jobs.JobCommand
 import fr.pickaria.jobs.JobController
 import fr.pickaria.economy.PickariaEconomy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import org.ktorm.database.Database
+import org.ktorm.entity.Entity
 import org.ktorm.support.postgresql.PostgreSqlDialect
 import java.sql.SQLException
 import java.util.logging.Level
@@ -91,5 +95,11 @@ class Main: JavaPlugin() {
 		}
 
 		logger.log(Level.INFO, "Pickaria plugin disabled")
+	}
+}
+
+fun <T : Entity<T>>Entity<T>.asyncFlushChanges(){
+	CoroutineScope(Dispatchers.Default).launch{
+		flushChanges()
 	}
 }
