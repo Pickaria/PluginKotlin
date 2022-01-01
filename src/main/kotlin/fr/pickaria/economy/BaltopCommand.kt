@@ -1,7 +1,12 @@
 package fr.pickaria.economy
 
+import com.github.shynixn.mccoroutine.SuspendingCommandExecutor
 import fr.pickaria.Main
 import fr.pickaria.model.EconomyModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit.getServer
 import org.bukkit.command.Command
@@ -9,13 +14,13 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.ktorm.dsl.*
 
-class BaltopCommand : CommandExecutor {
+class BaltopCommand : SuspendingCommandExecutor {
 	companion object {
 		const val PAGE_SIZE = 8
 		val server = getServer()
 	}
 
-	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+	override suspend fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		val page = try {
 			(args[0].toInt() - 1).coerceAtLeast(0)
 		} catch (_: ArrayIndexOutOfBoundsException) {
@@ -32,26 +37,25 @@ class BaltopCommand : CommandExecutor {
 			return true
 		}
 
-		//val max = (min + PAGE_SIZE - 1).coerceAtMost(players.size - 1)
-		val component = TextComponent("§6==== Baltop (${page + 1}/${players.size / PAGE_SIZE + 1}) ====")
+		val max = (min + PAGE_SIZE - 1).coerceAtMost(players.size - 1)
 
-		Main.database
-			.from(EconomyModel)
-			.select()
-			.orderBy(EconomyModel.balance.desc())
-			.limit(min, 8)
-			.where { EconomyModel.balance greater 0.0 }
-			.forEachIndexed {
-				index, it ->
-				val uuid = it[EconomyModel.playerUniqueId]
-				val balance = it[EconomyModel.balance]!!
-				val player = server.getOfflinePlayer(uuid!!)
-				component.addExtra("\n§f${index + 1 + min}. §7${player.name}, ${Main.economy.format(balance)}")
-			}
+		sender.sendMessage("Mise en cache du baltop, veuillez patienter...")
 
-		component.addExtra("\n§7Tapez §6/baltop ${page + 2}§7 pour lire la page suivante.")
+		CoroutineScope(Dispatchers.Default).launch {
+			val component = TextComponent("§6==== Baltop (${page + 1}/${players.size / PAGE_SIZE + 1}) ====")
 
-		sender.spigot().sendMessage(component)
+			players.filter { Main.economy.hasAccount(it) }
+				.map { Pair(it.name, Main.economy.getBalance(it)) }
+				.sortedByDescending { it.second }
+				.slice(min..max)
+				.forEachIndexed { index, it ->
+					component.addExtra("\n§f${index + 1 + min}. §7${it.first}, ${Main.economy.format(it.second)}")
+				}
+
+			component.addExtra("\n§7Tapez §6/baltop ${page + 2}§7 pour lire la page suivante.")
+
+			sender.spigot().sendMessage(component)
+		}
 
 		return true
 	}

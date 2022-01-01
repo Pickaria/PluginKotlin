@@ -4,18 +4,20 @@ import fr.pickaria.Main
 import fr.pickaria.asyncFlushChanges
 import fr.pickaria.model.Economy
 import fr.pickaria.model.economy
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
-import org.bukkit.Bukkit.getServer
+import org.bukkit.Bukkit.*
 import org.bukkit.OfflinePlayer
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.scheduler.BukkitRunnable
 import org.ktorm.dsl.*
 import org.ktorm.entity.find
 import java.text.DecimalFormat
@@ -24,16 +26,26 @@ import org.ktorm.entity.add
 import java.sql.SQLException
 
 
-class PickariaEconomy : AbstractEconomy(), Listener {
+class PickariaEconomy(plugin: Main) : AbstractEconomy(), Listener {
 	private val cache: MutableMap<UUID, Economy> = mutableMapOf()
+	private var enabled: Boolean = false
 
-	override fun isEnabled() = true
+	init {
+		enabled = true
+
+		// Write cache to data base every 10 minutes
+		object : BukkitRunnable() {
+			override fun run() {
+				flushAllAccounts()
+			}
+		}.runTaskTimerAsynchronously(plugin, 12000, 12000 /* 10 minutes */)
+	}
+
+	override fun isEnabled() = enabled
 
 	// Event handlers
 	@EventHandler(priority = EventPriority.MONITOR)
 	suspend fun onPlayerJoin(event: PlayerJoinEvent) {
-		println("On thread ${Thread.currentThread().name}")
-		delay(5000)
 		val uniqueId = event.player.uniqueId
 		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.also {
 			cache.putIfAbsent(uniqueId, it)
@@ -49,25 +61,28 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		}
 	}
 
-	fun flushAllAccounts() {
-		println("Flushing all economy accounts...")
+	fun flushAllAccounts(removeFromCache: Boolean = false): Int {
+		getLogger().info("Flushing all economy accounts...")
 		var flushed = 0
 
 		cache.forEach { (uuid, account) ->
 			run {
 				try {
 					account.flushChanges()
-					cache.remove(uuid)
-					println("Flushed $uuid account")
+					if (removeFromCache) {
+						cache.remove(uuid)
+					}
 					flushed++
 				} catch (err: SQLException) {
 					err.printStackTrace()
-					println("Cannot flush account of $uuid, balance: ${account.balance}")
+					getLogger().severe("Cannot flush account of $uuid, balance: ${account.balance}")
 				}
 			}
 		}
 
-		println("Flushed $flushed economy accounts!")
+		getLogger().info("Flushed $flushed economy accounts!")
+
+		return flushed
 	}
 
 	private fun getFromCache(uniqueId: UUID): Economy? =

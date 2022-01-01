@@ -2,6 +2,7 @@ package fr.pickaria
 
 import com.github.shynixn.mccoroutine.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.registerSuspendingEvents
+import com.github.shynixn.mccoroutine.setSuspendingExecutor
 import fr.pickaria.coins.Coin
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
@@ -56,7 +57,7 @@ class Main: SuspendingJavaPlugin() {
 			// Economy commands
 			getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.warning("Command could not be registered")
 			getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.warning("Command could not be registered")
-			getCommand("baltop")?.setExecutor(BaltopCommand()) ?: server.logger.warning("Command could not be registered")
+			getCommand("baltop")?.setSuspendingExecutor(BaltopCommand()) ?: server.logger.warning("Command could not be registered")
 
 			// Jobs
 			JobController(this)
@@ -76,7 +77,7 @@ class Main: SuspendingJavaPlugin() {
 			Economy::class.java
 		)
 		if (rsp == null) {
-			economy = PickariaEconomy()
+			economy = PickariaEconomy(this)
 			Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
 			server.pluginManager.registerSuspendingEvents(economy as PickariaEconomy, this)
 
@@ -93,7 +94,8 @@ class Main: SuspendingJavaPlugin() {
 
 		if (economy is PickariaEconomy) {
 			logger.info("Pickaria is handling economy, flushing accounts...")
-			(economy as PickariaEconomy).flushAllAccounts()
+			val flushed = (economy as PickariaEconomy).flushAllAccounts(true)
+			logger.info("Flushed $flushed accounts !")
 		}
 
 		logger.log(Level.INFO, "Pickaria plugin disabled")
