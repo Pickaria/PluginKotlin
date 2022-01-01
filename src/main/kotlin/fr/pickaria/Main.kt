@@ -1,5 +1,7 @@
 package fr.pickaria
 
+import com.github.shynixn.mccoroutine.SuspendingJavaPlugin
+import com.github.shynixn.mccoroutine.registerSuspendingEvents
 import fr.pickaria.coins.Coin
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
@@ -19,7 +21,7 @@ import java.sql.SQLException
 import java.util.logging.Level
 
 
-class Main: JavaPlugin() {
+class Main: SuspendingJavaPlugin() {
 	companion object {
 		lateinit var database: Database
 		lateinit var economy: Economy
@@ -29,6 +31,8 @@ class Main: JavaPlugin() {
 		super.onEnable()
 
 		saveDefaultConfig()
+
+		logger.info("Main on thread ${Thread.currentThread().name}")
 
 		try {
 			val databaseConfiguration = this.config.getConfigurationSection("database")
@@ -107,7 +111,7 @@ fun <T>DBAsync(block: suspend () -> T){
 }
 
 fun <T : Entity<T>>Entity<T>.asyncFlushChanges(){
-	CoroutineScope(Dispatchers.Default).launch{
+	CoroutineScope(Dispatchers.IO).launch{
 		flushChanges()
 	}
 }

@@ -18,8 +18,6 @@ import org.ktorm.dsl.*
 import org.ktorm.entity.find
 import java.text.DecimalFormat
 import java.util.*
-import kotlinx.coroutines.*
-import org.bukkit.Bukkit.getLogger
 import org.ktorm.entity.add
 import java.sql.SQLException
 
@@ -31,18 +29,22 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 
 	// Event handlers
 	@EventHandler(priority = EventPriority.MONITOR)
-	fun onPlayerJoin(event: PlayerJoinEvent) {
-		CoroutineScope(Dispatchers.Default).launch {
-			val uniqueId = event.player.uniqueId
-			Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let{
-				cache.putIfAbsent(uniqueId, it)
-			} ?: createPlayerAccount(event.player)
-		}
+	suspend fun onPlayerJoin(event: PlayerJoinEvent) {
+		println("On thread ${Thread.currentThread().name}")
+		delay(5000)
+		val uniqueId = event.player.uniqueId
+		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.also {
+			cache.putIfAbsent(uniqueId, it)
+		} ?: createPlayerAccount(event.player)
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	fun onPlayerQuit(event: PlayerQuitEvent) {
-		cache[event.player.uniqueId]?.asyncFlushChanges()
+	suspend fun onPlayerQuit(event: PlayerQuitEvent) {
+		cache[event.player.uniqueId]?.flushChanges()?.let {
+			if (it > 0) {
+				cache.remove(event.player.uniqueId)
+			}
+		}
 	}
 
 	fun flushAllAccounts() {
@@ -52,23 +54,23 @@ class PickariaEconomy : AbstractEconomy(), Listener {
 		cache.forEach { (uuid, account) ->
 			run {
 				try {
-					getLogger().fine("Flushed $uuid account")
 					account.flushChanges()
 					cache.remove(uuid)
+					println("Flushed $uuid account")
 					flushed++
 				} catch (err: SQLException) {
 					err.printStackTrace()
-					getLogger().severe("Cannot flush account of $uuid, balance: ${account.balance}")
+					println("Cannot flush account of $uuid, balance: ${account.balance}")
 				}
 			}
 		}
 
-		getLogger().fine("Flushed $flushed economy accounts!")
+		println("Flushed $flushed economy accounts!")
 	}
 
 	private fun getFromCache(uniqueId: UUID): Economy? =
 		cache[uniqueId] ?:
-		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let{
+		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let {
 			cache[uniqueId] = it
 			it
 		}
