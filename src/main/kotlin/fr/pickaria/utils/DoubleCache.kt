@@ -1,9 +1,8 @@
 package fr.pickaria.utils
-import fr.pickaria.model.Economy
+
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
-import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.ktorm.entity.Entity
@@ -11,8 +10,8 @@ import java.sql.SQLException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-interface Cache<V: Entity<V>>: Listener {
-	val cache: ConcurrentHashMap<UUID, V>
+interface DoubleCache<K, V : Entity<V>> {
+	val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<K, V>>
 		get() = ConcurrentHashMap()
 
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -20,9 +19,11 @@ interface Cache<V: Entity<V>>: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	suspend fun onPlayerQuit(event: PlayerQuitEvent) {
-		cache[event.player.uniqueId]?.flushChanges()?.let {
-			if (it > 0) {
-				cache.remove(event.player.uniqueId)
+		cache[event.player.uniqueId]?.forEach {
+			it.value.flushChanges().let { rows ->
+				if (rows > 0) {
+					cache.remove(event.player.uniqueId)
+				}
 			}
 		}
 	}
@@ -32,15 +33,17 @@ interface Cache<V: Entity<V>>: Listener {
 		var flushed = 0
 
 		cache.forEach { (uuid, account) ->
-			try {
-				account.flushChanges()
-				if (removeFromCache || !Bukkit.getServer().getOfflinePlayer(uuid).isOnline) {
-					cache.remove(uuid)
+			account.forEach {
+				try {
+					it.value.flushChanges()
+					if (removeFromCache || !Bukkit.getServer().getOfflinePlayer(uuid).isOnline) {
+						cache.remove(uuid)
+					}
+					flushed++
+				} catch (err: SQLException) {
+					err.printStackTrace()
+					log?.invoke(uuid, it.value) ?: Bukkit.getLogger().severe("Cannot flush entity of $uuid")
 				}
-				flushed++
-			} catch (err: SQLException) {
-				err.printStackTrace()
-				log?.invoke(uuid, account) ?: Bukkit.getLogger().severe("Cannot flush entity of $uuid")
 			}
 		}
 
@@ -49,5 +52,6 @@ interface Cache<V: Entity<V>>: Listener {
 		return flushed
 	}
 
-	 fun getFromCache(uniqueId: UUID): V?
+	fun getFromCache(uniqueId: UUID): ConcurrentHashMap<K, V>?
+	fun getFromCache(uniqueId: UUID, key: K): V?
 }

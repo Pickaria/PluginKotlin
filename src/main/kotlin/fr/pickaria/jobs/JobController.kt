@@ -1,12 +1,16 @@
 package fr.pickaria.jobs
 
 import fr.pickaria.Main
+import fr.pickaria.asyncFlushChanges
 import fr.pickaria.jobs.jobs.*
 import fr.pickaria.model.Job
+import fr.pickaria.model.economy
 import fr.pickaria.model.job
+import fr.pickaria.utils.DoubleCache
 import org.bukkit.Bukkit.getServer
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.sql.SQLException
@@ -15,13 +19,14 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
-class JobController(plugin: Main): Listener {
+class JobController(plugin: Main) : Listener {
 	init {
 		getServer().pluginManager.registerEvents(this, plugin)
 
@@ -34,58 +39,51 @@ class JobController(plugin: Main): Listener {
 		getServer().pluginManager.registerEvents(Trader(), plugin)
 	}
 
-	companion object {
-		private val playerJobs: MutableMap<UUID, MutableMap<JobEnum, Job>> = mutableMapOf()
+	companion object : DoubleCache<JobEnum, Job> {
 		const val MAX_JOBS = 1
 		const val COOLDOWN = 24L
 
-		fun getJob(playerUuid: UUID, jobName: JobEnum): Job {
-			return try {
-				playerJobs[playerUuid]!![jobName]!!
-			} catch (_: NullPointerException) {
-				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active }!!
-				val jobEnum = JobEnum.valueOf(job.job)
+		override suspend fun onPlayerJoin(event: PlayerJoinEvent) {
+			getFromCache(event.player.uniqueId)
+		}
 
-				playerJobs[playerUuid] = mutableMapOf(Pair(jobEnum, job))
+		override fun getFromCache(uniqueId: UUID, key: JobEnum): Job? =
+			cache[uniqueId]?.get(key)
+				?: Main.database.job.find { (it.playerUniqueId eq uniqueId) and (it.job eq key.name) }?.let {
+					cache[uniqueId]?.set(key, it) ?: run {
+						cache[uniqueId] = ConcurrentHashMap()
+						cache[uniqueId]?.set(key, it)
+					}
+					cache[uniqueId]?.get(key)
+				}
 
-				job
+		override fun getFromCache(uniqueId: UUID): ConcurrentHashMap<JobEnum, Job>? {
+			return if (cache.containsKey(uniqueId)) {
+				cache[uniqueId]
+			} else {
+				cache[uniqueId] = ConcurrentHashMap()
+
+				Main.database.job.filter { it.playerUniqueId eq uniqueId }
+					.forEach {
+						cache[uniqueId]?.set(JobEnum.valueOf(it.job), it)
+					}
+
+				cache[uniqueId]
 			}
 		}
 
 		fun hasJob(playerUuid: UUID, jobName: JobEnum): Boolean {
-			if (playerJobs.contains(playerUuid)) {
-				if (playerJobs[playerUuid]?.containsKey(jobName) == true) return true // Get from cache
-				return false
-			}
-
-			return try {
-				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active }!!
-				val jobEnum = JobEnum.valueOf(job.job)
-
-				try {
-					playerJobs[playerUuid]!![jobEnum] = job // Save in cache
-				} catch (_: NullPointerException) {
-					playerJobs[playerUuid] = mutableMapOf(Pair(jobEnum, job))
-				}
-
-				job.active
-			} catch (_: NullPointerException) {
-				false
-			}
-		}
-
-		fun getJobs(playerUuid: UUID): List<Job> {
-			return Main.database.job.filter { it.playerUniqueId eq playerUuid and it.active }.toList()
+			return getFromCache(playerUuid, jobName) != null
 		}
 
 		fun jobCount(playerUuid: UUID): Int {
-			return Main.database.job.filter { it.playerUniqueId eq playerUuid and it.active }.totalRecords
+			return getFromCache(playerUuid)?.size ?: 0
 		}
 
 		fun getCooldown(playerUuid: UUID, jobName: JobEnum): Int {
 			val previousDay = LocalDateTime.now().minusHours(COOLDOWN)
 
-			val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) }
+			val job = getFromCache(playerUuid, jobName)
 			return if (job == null || !job.active) {
 				0
 			} else {
@@ -102,17 +100,9 @@ class JobController(plugin: Main): Listener {
 				lastUsed = Instant.now()
 			}
 
-			// Set current as "active" = true
-			// try {
-			// 	 insert into job (player_uuid, job, active) values ('$playerUuid', '${newJob.name}', true)
-			// } catch {
-			// 	  on conflict (player_uuid, job) do update set active = true, last_used = now()
-			// }
-
-			try {
-				playerJobs[playerUuid]!![jobName] = job // Save in cache
-			} catch (_: NullPointerException) {
-				playerJobs[playerUuid] = mutableMapOf(Pair(jobName, job))
+			cache[playerUuid]?.set(jobName, job) ?: run {
+				cache[playerUuid] = ConcurrentHashMap()
+				cache[playerUuid]?.set(jobName, job)
 			}
 
 			return try {
@@ -135,17 +125,13 @@ class JobController(plugin: Main): Listener {
 			job.active = false
 			job.level = (job.level * 0.8).toInt()
 
-			try {
-				playerJobs[playerUuid]!!.remove(jobName) // Save in cache
-			} catch (_: NullPointerException) {
-				playerJobs[playerUuid] = mutableMapOf()
+			cache[playerUuid]?.remove(jobName) ?: run {
+				cache[playerUuid] = ConcurrentHashMap()
 			}
 
-			return if (job.flushChanges() > 0) {
-				JobErrorEnum.JOB_LEFT
-			} else {
-				JobErrorEnum.UNKNOWN
-			}
+			job.asyncFlushChanges()
+
+			return JobErrorEnum.JOB_LEFT
 		}
 
 		fun getExperienceFromLevel(level: Int): Int {
@@ -158,7 +144,7 @@ class JobController(plugin: Main): Listener {
 
 		fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
 			return try {
-				val job = getJob(playerUuid, jobName)
+				val job = getFromCache(playerUuid, jobName)!!
 				val previousLevel = getLevelFromExperience(job.level)
 				job.level += exp
 
@@ -176,7 +162,7 @@ class JobController(plugin: Main): Listener {
 			val res = addExperience(player.uniqueId, jobName, exp);
 
 			if (res == JobErrorEnum.NEW_LEVEL) {
-				val job = getJob(player.uniqueId, jobName)
+				val job = getFromCache(player.uniqueId, jobName)!!
 				player.sendMessage("§7Vous montez niveau §6${getLevelFromExperience(job.level)}§7 dans le métier §6${jobName.label}§7.")
 			}
 

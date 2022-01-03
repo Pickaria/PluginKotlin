@@ -20,11 +20,11 @@ class JobCommand : CommandExecutor, TabCompleter {
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		if (sender is Player) {
 			if (args.isEmpty()) {
-				val jobs = JobController.getJobs(sender.uniqueId).map { JobEnum.valueOf(it.job).label.lowercase() }
-				val message = if (jobs.isEmpty()) {
+				val jobs = JobController.getFromCache(sender.uniqueId)?.map { it.key.label }
+				val message = if (JobController.jobCount(sender.uniqueId) == 0) {
 					 "§cVous n'exercez actuellement pas de métier."
 				} else {
-					"§7Vous exercez le(s) métier(s) : ${jobs.joinToString(", ")}."
+					"§7Vous exercez le(s) métier(s) : ${jobs?.joinToString(", ")}."
 				}
 				sender.sendMessage(message)
 				return true
