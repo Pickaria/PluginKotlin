@@ -12,20 +12,23 @@ import java.util.concurrent.ConcurrentHashMap
 
 interface DoubleCache<K, V : Entity<V>> {
 	val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<K, V>>
-		get() = ConcurrentHashMap()
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	suspend fun onPlayerJoin(event: PlayerJoinEvent)
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	suspend fun onPlayerQuit(event: PlayerQuitEvent) {
-		cache[event.player.uniqueId]?.forEach {
-			it.value.flushChanges().let { rows ->
+		cache[event.player.uniqueId]?.let { playerCache ->
+			playerCache.forEach {
+				val rows = it.value.flushChanges()
+
 				if (rows > 0) {
-					cache.remove(event.player.uniqueId)
+					playerCache.remove(it.key!!)
 				}
 			}
 		}
+
+		cache.remove(event.player.uniqueId)
 	}
 
 	fun flushAllAccounts(removeFromCache: Boolean = false, log: ((uuid: UUID, entity: V) -> Unit)? = null): Int {

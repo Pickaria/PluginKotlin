@@ -1,7 +1,6 @@
 package fr.pickaria.jobs
 
 import fr.pickaria.Main
-import fr.pickaria.model.EconomyModel
 import fr.pickaria.model.JobModel
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -20,10 +19,10 @@ class JobCommand : CommandExecutor, TabCompleter {
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		if (sender is Player) {
 			if (args.isEmpty()) {
-				val jobs = JobController.getFromCache(sender.uniqueId)?.map { it.key.label }
-				val message = if (JobController.jobCount(sender.uniqueId) == 0) {
+				val message = if (Main.jobController.jobCount(sender.uniqueId) == 0) {
 					 "§cVous n'exercez actuellement pas de métier."
 				} else {
+					val jobs = Main.jobController.getFromCache(sender.uniqueId)?.filter { it.value.active }?.map { it.key.label }
 					"§7Vous exercez le(s) métier(s) : ${jobs?.joinToString(", ")}."
 				}
 				sender.sendMessage(message)
@@ -44,32 +43,33 @@ class JobCommand : CommandExecutor, TabCompleter {
 
 			when (args[0]) {
 				"join" -> {
-					if (JobController.jobCount(sender.uniqueId) >= JobController.MAX_JOBS) {
+					if (Main.jobController.jobCount(sender.uniqueId) >= JobController.MAX_JOBS) {
 						sender.sendMessage("§cVous ne pouvez pas avoir plus de ${JobController.MAX_JOBS} métier(s).")
-					} else if (JobController.hasJob(sender.uniqueId, job)) {
+					} else if (Main.jobController.hasJob(sender.uniqueId, job)) {
 						sender.sendMessage("§cVous exercez déjà ce métier.")
 					} else {
-						val cooldown = JobController.getCooldown(sender.uniqueId, job)
+						val cooldown = Main.jobController.getCooldown(sender.uniqueId, job)
 
 						if (cooldown > 0) {
 							sender.sendMessage("§cVous devez attendre $cooldown heures avant de changer de métier.")
-						} else if (JobController.joinJob(sender.uniqueId, job)) {
-							sender.sendMessage("§7Vous avez rejoint le métier ${job.label}.")
 						} else {
-							sender.sendMessage("§cUne erreur inconnue est survenue.")
+							Main.jobController.joinJob(sender.uniqueId, job)
+							sender.sendMessage("§7Vous avez rejoint le métier ${job.label}.")
 						}
 					}
 				}
 				"leave" -> {
-					when (JobController.leaveJob(sender.uniqueId, job)) {
-						JobErrorEnum.NOT_EXERCICE -> sender.sendMessage("§cVous n'exercez pas ce métier.")
-						JobErrorEnum.COOLDOWN -> {
-							val cooldown = JobController.getCooldown(sender.uniqueId, job)
+					if (!Main.jobController.hasJob(sender.uniqueId, job)) {
+						sender.sendMessage("§cVous n'exercez pas ce métier.")
+					} else {
+						val cooldown = Main.jobController.getCooldown(sender.uniqueId, job)
+
+						if (cooldown > 0) {
 							sender.sendMessage("§cVous devez attendre $cooldown heures avant de changer de métier.")
+						} else {
+							Main.jobController.leaveJob(sender.uniqueId, job)
+							sender.sendMessage("§7Vous avez quitté le métier ${job.label}.")
 						}
-						JobErrorEnum.JOB_LEFT -> sender.sendMessage("§7Vous avez quitté le métier de ${job.label}.")
-						JobErrorEnum.UNKNOWN -> sender.sendMessage("§cUne erreur inconnue est survenue.")
-						else -> sender.sendMessage("§cUne erreur inconnue est survenue, c'était innatendu.")
 					}
 				}
 				"top" -> {

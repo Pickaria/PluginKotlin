@@ -1,7 +1,7 @@
 package fr.pickaria.jobs.jobs
 
+import fr.pickaria.Main
 import fr.pickaria.coins.Coin
-import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
 import org.bukkit.Bukkit.getServer
 import org.bukkit.Location
@@ -35,7 +35,7 @@ class Alchemist: Listener {
 		if (event.clickedBlock == null) return
 
 		val uniqueId = event.player.uniqueId
-		if (!JobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
+		if (!Main.jobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
 
 		brewingStands.putIfAbsent(event.clickedBlock!!.location, uniqueId)
 	}
@@ -49,13 +49,13 @@ class Alchemist: Listener {
 	fun onBrew(event: BrewEvent) {
 		val location = event.block.location
 		val uniqueId = brewingStands[location]
-		if (uniqueId == null || !JobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
+		if (uniqueId == null || !Main.jobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
 
 		event.results.forEach {
 			if (isPotion(it)) {
 				Coin.dropCoin(location, 1.0, 2.0)
 				val player = getServer().getOfflinePlayer(uniqueId) as Player
-				JobController.addExperienceAndAnnounce(player, JobEnum.ALCHEMIST, 1)
+				Main.jobController.addExperienceAndAnnounce(player, JobEnum.ALCHEMIST, 1)
 			}
 		}
 	}

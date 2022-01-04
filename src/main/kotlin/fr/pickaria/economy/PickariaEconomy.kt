@@ -2,7 +2,9 @@ package fr.pickaria.economy
 
 import fr.pickaria.Main
 import fr.pickaria.asyncFlushChanges
+import fr.pickaria.jobs.JobEnum
 import fr.pickaria.model.Economy
+import fr.pickaria.model.Job
 import fr.pickaria.model.economy
 import fr.pickaria.utils.Cache
 import net.milkbowl.vault.economy.AbstractEconomy
@@ -18,10 +20,12 @@ import org.ktorm.entity.find
 import java.text.DecimalFormat
 import java.util.*
 import org.ktorm.entity.add
+import java.util.concurrent.ConcurrentHashMap
 
 
 class PickariaEconomy(plugin: Main) : AbstractEconomy(), Cache<Economy> {
 	private var enabled: Boolean = false
+	override val cache: ConcurrentHashMap<UUID, Economy> = ConcurrentHashMap()
 
 	init {
 		enabled = true

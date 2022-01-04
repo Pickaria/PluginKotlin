@@ -1,7 +1,7 @@
 package fr.pickaria.jobs.jobs
 
+import fr.pickaria.Main
 import fr.pickaria.coins.Coin.Companion.dropCoin
-import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
@@ -37,7 +37,7 @@ class Miner: Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(event: BlockBreakEvent) {
 		val player = event.player
-		if (!JobController.hasJob(player.uniqueId, JobEnum.MINER)) return
+		if (!Main.jobController.hasJob(player.uniqueId, JobEnum.MINER)) return
 
 		val material = event.block.type
 		if (materials.containsKey(material)) {
@@ -45,7 +45,7 @@ class Miner: Listener {
 			val itemInHand = player.inventory.itemInMainHand
 			if (!itemInHand.enchantments.contains(Enchantment.SILK_TOUCH) && event.block.getDrops(itemInHand).isNotEmpty()) {
 				dropCoin(event.block.location)
-				JobController.addExperienceAndAnnounce(player, JobEnum.MINER, 1)
+				Main.jobController.addExperienceAndAnnounce(player, JobEnum.MINER, 1)
 			}
 		}
 	}

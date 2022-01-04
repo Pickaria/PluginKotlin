@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 interface Cache<V: Entity<V>>: Listener {
 	val cache: ConcurrentHashMap<UUID, V>
-		get() = ConcurrentHashMap()
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	suspend fun onPlayerJoin(event: PlayerJoinEvent)

@@ -25,6 +25,7 @@ class Main: SuspendingJavaPlugin() {
 	companion object {
 		lateinit var database: Database
 		lateinit var economy: Economy
+		lateinit var jobController: JobController
 	}
 
 	override fun onEnable() {
@@ -59,7 +60,7 @@ class Main: SuspendingJavaPlugin() {
 			getCommand("baltop")?.setSuspendingExecutor(BaltopCommand()) ?: server.logger.warning("Command could not be registered")
 
 			// Jobs
-			JobController(this)
+			jobController = JobController(this)
 			getCommand("job")?.setExecutor(JobCommand()) ?: server.logger.warning("Command could not be registered")
 			server.pluginManager.registerEvents(Coin(), this)
 		}

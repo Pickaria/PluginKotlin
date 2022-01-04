@@ -30,7 +30,11 @@ class Coin: Listener {
 		}
 
 		fun dropCoin(location: Location, min: Double, max: Double) {
-			val amount = Random.nextDouble(min, max)
+			val amount = if (min == max) {
+				min
+			} else {
+				Random.nextDouble(min, max)
+			}
 			dropCoin(location, amount)
 		}
 

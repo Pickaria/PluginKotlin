@@ -1,7 +1,7 @@
 package fr.pickaria.jobs.jobs
 
+import fr.pickaria.Main
 import fr.pickaria.coins.Coin
-import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
 import org.bukkit.Material
 import org.bukkit.block.data.Ageable
@@ -20,7 +20,7 @@ class Farmer : Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBlockBreak(event: BlockBreakEvent) {
-		if (!JobController.hasJob(event.player.uniqueId, JobEnum.FARMER)) return
+		if (!Main.jobController.hasJob(event.player.uniqueId, JobEnum.FARMER)) return
 
 		val material = event.block.type
 		println(material)
@@ -28,14 +28,14 @@ class Farmer : Listener {
 			val blockData = event.block.blockData as Ageable
 			if (blockData.age == blockData.maximumAge) {
 				Coin.dropCoin(event.block.location)
-				JobController.addExperienceAndAnnounce(event.player, JobEnum.FARMER, 1)
+				Main.jobController.addExperienceAndAnnounce(event.player, JobEnum.FARMER, 1)
 			}
 		}
 	}
 
 	/*@EventHandler(priority = EventPriority.MONITOR)
 	fun onPlayerInteract(event: PlayerInteractEvent) {
-		if (!JobController.hasJob(event.player.uniqueId, JobEnum.FARMER)) return
+		if (!Main.jobController.hasJob(event.player.uniqueId, JobEnum.FARMER)) return
 		val block = event.clickedBlock
 		if (block != null) {
 			if (block.type == Material.SWEET_BERRY_BUSH) {
