@@ -6,7 +6,6 @@ import net.md_5.bungee.api.chat.TextComponent
 import net.milkbowl.vault.economy.EconomyResponse
 import net.minecraft.nbt.NBTTagByte
 import net.minecraft.nbt.NBTTagDouble
-import net.minecraft.nbt.NBTTagList
 import org.bukkit.Bukkit.getLogger
 import org.bukkit.Location
 import org.bukkit.Material

@@ -1,14 +1,11 @@
 package fr.pickaria.utils
 
-import fr.pickaria.Main
-import fr.pickaria.model.job
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.ktorm.entity.Entity
-import org.ktorm.entity.add
 import java.sql.SQLException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap

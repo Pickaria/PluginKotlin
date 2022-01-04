@@ -50,7 +50,6 @@ class Main: SuspendingJavaPlugin() {
 		}
 
 		server.pluginManager.registerEvents(Test(), this)
-		getCommand("lol")?.setExecutor(Command()) ?: server.logger.warning("Command lol could not be registered")
 
 		// Economy
 		if (setupEconomy()) {
