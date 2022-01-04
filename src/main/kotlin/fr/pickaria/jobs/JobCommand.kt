@@ -103,10 +103,22 @@ class JobCommand : CommandExecutor, TabCompleter {
 		alias: String,
 		args: Array<out String>
 	): MutableList<String> {
-		return when (args.size) {
-			1 -> SUB_COMMANDS.filter { it.startsWith(args[0]) }.toMutableList()
-			2 -> JobEnum.values().map { it.name.lowercase() }.filter { it.startsWith(args[1]) }.toMutableList()
-			else -> mutableListOf()
+		if (sender is Player) {
+			return when (args.size) {
+				1 -> SUB_COMMANDS.filter { it.startsWith(args[0]) }.toMutableList()
+				2 -> when (args[0]) {
+					"top", "join" -> JobEnum.values().map { it.name.lowercase() }.filter { it.startsWith(args[1]) }
+						.toMutableList()
+					"leave" -> Main.jobController.getFromCache((sender as Player).uniqueId)
+						?.filter { it.value.active }
+						?.map { it.value.job.lowercase() }
+						?.toMutableList() ?: mutableListOf()
+					else -> mutableListOf()
+				}
+				else -> mutableListOf()
+			}
 		}
+
+		return mutableListOf()
 	}
 }
