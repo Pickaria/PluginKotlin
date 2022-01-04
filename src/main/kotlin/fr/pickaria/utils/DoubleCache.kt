@@ -1,11 +1,14 @@
 package fr.pickaria.utils
 
+import fr.pickaria.Main
+import fr.pickaria.model.job
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.ktorm.entity.Entity
+import org.ktorm.entity.add
 import java.sql.SQLException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -20,19 +23,15 @@ interface DoubleCache<K, V : Entity<V>> {
 	suspend fun onPlayerQuit(event: PlayerQuitEvent) {
 		cache[event.player.uniqueId]?.let { playerCache ->
 			playerCache.forEach {
-				val rows = it.value.flushChanges()
-
-				if (rows > 0) {
-					playerCache.remove(it.key!!)
-				}
+				it.value.flushChanges()
 			}
 		}
 
 		cache.remove(event.player.uniqueId)
 	}
 
-	fun flushAllAccounts(removeFromCache: Boolean = false, log: ((uuid: UUID, entity: V) -> Unit)? = null): Int {
-		Bukkit.getLogger().info("Flushing all economy accounts...")
+	fun flushAllEntities(removeFromCache: Boolean = false, log: ((uuid: UUID, entity: V) -> Unit)? = null): Int {
+		Bukkit.getLogger().info("Flushing all entities...")
 		var flushed = 0
 
 		cache.forEach { (uuid, account) ->
@@ -50,7 +49,7 @@ interface DoubleCache<K, V : Entity<V>> {
 			}
 		}
 
-		Bukkit.getLogger().info("Flushed $flushed economy accounts!")
+		Bukkit.getLogger().info("Flushed $flushed entities!")
 
 		return flushed
 	}

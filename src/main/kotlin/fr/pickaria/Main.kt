@@ -50,18 +50,18 @@ class Main: SuspendingJavaPlugin() {
 		}
 
 		server.pluginManager.registerEvents(Test(), this)
-		getCommand("lol")?.setExecutor(Command()) ?: server.logger.warning("Command could not be registered")
+		getCommand("lol")?.setExecutor(Command()) ?: server.logger.warning("Command lol could not be registered")
 
 		// Economy
 		if (setupEconomy()) {
 			// Economy commands
-			getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.warning("Command could not be registered")
-			getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.warning("Command could not be registered")
-			getCommand("baltop")?.setSuspendingExecutor(BaltopCommand()) ?: server.logger.warning("Command could not be registered")
+			getCommand("money")?.setExecutor(MoneyCommand()) ?: server.logger.warning("Command money could not be registered")
+			getCommand("pay")?.setExecutor(PayCommand()) ?: server.logger.warning("Command pay could not be registered")
+			getCommand("baltop")?.setSuspendingExecutor(BaltopCommand()) ?: server.logger.warning("Command baltop could not be registered")
 
 			// Jobs
 			jobController = JobController(this)
-			getCommand("job")?.setExecutor(JobCommand()) ?: server.logger.warning("Command could not be registered")
+			getCommand("job")?.setExecutor(JobCommand()) ?: server.logger.warning("Command job could not be registered")
 			server.pluginManager.registerEvents(Coin(), this)
 		}
 
@@ -93,9 +93,8 @@ class Main: SuspendingJavaPlugin() {
 		super.onDisable()
 
 		if (economy is PickariaEconomy) {
-			logger.info("Pickaria is handling economy, flushing accounts...")
-			val flushed = (economy as PickariaEconomy).flushAllAccounts(true)
-			logger.info("Flushed $flushed accounts !")
+			(economy as PickariaEconomy).flushAllEntities(true)
+			jobController.flushAllEntities(true)
 		}
 
 		logger.log(Level.INFO, "Pickaria plugin disabled")

@@ -23,7 +23,6 @@ class Farmer : Listener {
 		if (!Main.jobController.hasJob(event.player.uniqueId, JobEnum.FARMER)) return
 
 		val material = event.block.type
-		println(material)
 		if (materials.containsKey(material)) {
 			val blockData = event.block.blockData as Ageable
 			if (blockData.age == blockData.maximumAge) {

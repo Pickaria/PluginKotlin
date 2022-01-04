@@ -1,5 +1,4 @@
 package fr.pickaria.utils
-import fr.pickaria.model.Economy
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -19,15 +18,12 @@ interface Cache<V: Entity<V>>: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	suspend fun onPlayerQuit(event: PlayerQuitEvent) {
-		cache[event.player.uniqueId]?.flushChanges()?.let {
-			if (it > 0) {
-				cache.remove(event.player.uniqueId)
-			}
-		}
+		cache[event.player.uniqueId]?.flushChanges()
+		cache.remove(event.player.uniqueId)
 	}
 
-	fun flushAllAccounts(removeFromCache: Boolean = false, log: ((uuid: UUID, entity: V) -> Unit)? = null): Int {
-		Bukkit.getLogger().info("Flushing all economy accounts...")
+	fun flushAllEntities(removeFromCache: Boolean = false, log: ((uuid: UUID, entity: V) -> Unit)? = null): Int {
+		Bukkit.getLogger().info("Flushing all entities...")
 		var flushed = 0
 
 		cache.forEach { (uuid, account) ->
@@ -43,7 +39,7 @@ interface Cache<V: Entity<V>>: Listener {
 			}
 		}
 
-		Bukkit.getLogger().info("Flushed $flushed economy accounts!")
+		Bukkit.getLogger().info("Flushed $flushed entities!")
 
 		return flushed
 	}

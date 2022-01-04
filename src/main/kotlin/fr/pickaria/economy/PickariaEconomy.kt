@@ -2,9 +2,7 @@ package fr.pickaria.economy
 
 import fr.pickaria.Main
 import fr.pickaria.asyncFlushChanges
-import fr.pickaria.jobs.JobEnum
 import fr.pickaria.model.Economy
-import fr.pickaria.model.Job
 import fr.pickaria.model.economy
 import fr.pickaria.utils.Cache
 import net.milkbowl.vault.economy.AbstractEconomy
@@ -33,7 +31,7 @@ class PickariaEconomy(plugin: Main) : AbstractEconomy(), Cache<Economy> {
 		// Write cache to database every 10 minutes
 		object : BukkitRunnable() {
 			override fun run() {
-				flushAllAccounts { uuid, account ->
+				flushAllEntities { uuid, account ->
 					getLogger().severe("Cannot flush account of $uuid with balance: ${account.balance}")
 				}
 			}

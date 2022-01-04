@@ -7,6 +7,7 @@ import net.milkbowl.vault.economy.EconomyResponse
 import net.minecraft.nbt.NBTTagByte
 import net.minecraft.nbt.NBTTagDouble
 import net.minecraft.nbt.NBTTagList
+import org.bukkit.Bukkit.getLogger
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Sound
@@ -39,7 +40,7 @@ class Coin: Listener {
 		}
 
 		fun dropCoin(location: Location, amount: Double) {
-			val item = location.world?.dropItemNaturally(location, createCoin(amount)) ?: return println("Error")
+			val item = location.world?.dropItemNaturally(location, createCoin(amount)) ?: return getLogger().warning("Could not drop coin.")
 			item.customName = Main.economy.format(amount)
 			item.isCustomNameVisible = true
 		}

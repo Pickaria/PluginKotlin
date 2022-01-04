@@ -2,19 +2,19 @@ package fr.pickaria.jobs
 
 import com.github.shynixn.mccoroutine.registerSuspendingEvents
 import fr.pickaria.Main
-import fr.pickaria.asyncFlushChanges
 import fr.pickaria.jobs.jobs.*
 import fr.pickaria.model.Job
 import fr.pickaria.model.job
 import fr.pickaria.utils.DoubleCache
+import org.bukkit.Bukkit
 import org.bukkit.Bukkit.getServer
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.scheduler.BukkitRunnable
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
-import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -45,6 +45,15 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 		getServer().pluginManager.registerEvents(Alchemist(), plugin)
 		getServer().pluginManager.registerEvents(Wizard(), plugin)
 		getServer().pluginManager.registerEvents(Trader(), plugin)
+
+		// Write cache to database every 10 minutes
+		object : BukkitRunnable() {
+			override fun run() {
+				flushAllEntities { uuid, account ->
+					Bukkit.getLogger().severe("Cannot flush job ${account.job} of $uuid with level : ${account.level}")
+				}
+			}
+		}.runTaskTimerAsynchronously(plugin, 12000, 12000 /* 10 minutes */)
 	}
 
 	@EventHandler
@@ -55,7 +64,6 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	override fun getFromCache(uniqueId: UUID, key: JobEnum): Job? =
 		cache[uniqueId]?.get(key)
 			?: Main.database.job.find { (it.playerUniqueId eq uniqueId) and (it.job eq key.name) }?.let {
-				println("Requesting database")
 				cache[uniqueId]?.set(key, it) ?: run {
 					cache[uniqueId] = ConcurrentHashMap()
 					cache[uniqueId]?.put(key, it)
@@ -67,7 +75,6 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 		return if (cache.containsKey(uniqueId)) {
 			cache[uniqueId]
 		} else {
-			println("Requesting database")
 			val jobs = ConcurrentHashMap<JobEnum, Job>()
 
 			Main.database.job.filter { it.playerUniqueId eq uniqueId }
@@ -75,7 +82,8 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 					jobs[JobEnum.valueOf(it.job)] = it
 				}
 
-			cache.put(uniqueId, jobs)
+			cache[uniqueId] = jobs
+			cache[uniqueId]
 		}
 	}
 
@@ -111,6 +119,8 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 				active = true
 				lastUsed = Instant.now()
 			}
+
+			Main.database.job.add(job)
 
 			cache[playerUuid]?.set(jobName, job) ?: run {
 				cache[playerUuid] = ConcurrentHashMap()
