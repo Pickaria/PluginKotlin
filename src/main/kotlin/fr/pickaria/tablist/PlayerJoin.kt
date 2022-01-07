@@ -11,13 +11,13 @@ class PlayerJoin : Listener {
 	fun onPlayerJoin(event: PlayerJoinEvent) {
 		val player = event.player
 		val prefix = Main.chat.getPlayerPrefix(player).replace("&", "§")
-		event.joinMessage = "§7[§6+§7]§r $prefix${player.displayName}"
+		player.setDisplayName("$prefix${player.displayName}")
+		event.joinMessage = "§7[§6+§7]§r ${player.displayName}"
 	}
 
 	@EventHandler
 	fun onPlayerQuit(event: PlayerQuitEvent) {
 		val player = event.player
-		val prefix = Main.chat.getPlayerPrefix(player).replace("&", "§")
-		event.quitMessage = "§7[§c-§7]§r $prefix${player.displayName}"
+		event.quitMessage = "§7[§c-§7]§r ${player.displayName}"
 	}
 }

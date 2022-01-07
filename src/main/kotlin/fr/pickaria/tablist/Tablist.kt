@@ -35,8 +35,7 @@ fun playerList(plugin: Main) {
 				// TODO: Hide player in spectator mode from list
 
 				// Build display name with prefix
-				val prefix = Main.chat.getPlayerPrefix(it).replace("&", "§")
-				val displayName = WrappedChatComponent.fromText(prefix + it.displayName)
+				val displayName = WrappedChatComponent.fromText(it.displayName)
 
 				val gameProfile = WrappedGameProfile(it.uniqueId, it.name)
 				val newInfoData = PlayerInfoData(gameProfile, it.ping, gameMode, displayName)
