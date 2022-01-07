@@ -12,13 +12,14 @@ import org.bukkit.event.entity.EntityDeathEvent
 import java.util.*
 
 
-class Hunter: Listener {
-	private val spawnerMobs = HashSet<UUID>()
+class Hunter : Listener {
+	private val spawnerMobs = mutableSetOf<UUID>()
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun preventSpawnerCoin(event: CreatureSpawnEvent) {
-		if (event.spawnReason != CreatureSpawnEvent.SpawnReason.SPAWNER && event.spawnReason != CreatureSpawnEvent.SpawnReason.SLIME_SPLIT) return
-		spawnerMobs.add(event.entity.uniqueId)
+		if (event.spawnReason == CreatureSpawnEvent.SpawnReason.SPAWNER || event.spawnReason == CreatureSpawnEvent.SpawnReason.SLIME_SPLIT) {
+			spawnerMobs.add(event.entity.uniqueId)
+		}
 	}
 
 	private fun fromSpawner(entity: Entity): Boolean {
@@ -36,13 +37,17 @@ class Hunter: Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onEntityDeath(event: EntityDeathEvent) {
-		spawnerMobs.remove(event.entity.uniqueId)
-		if (!isHostile(event.entity) || fromSpawner(event.entity)) return
+		if (fromSpawner(event.entity)) {
+			spawnerMobs.remove(event.entity.uniqueId)
+			return
+		} else if (isHostile(event.entity)) {
+			spawnerMobs.remove(event.entity.uniqueId)
+			val player = event.entity.killer ?: return
 
-		val player = event.entity.killer ?: return
-		if (!Main.jobController.hasJob(player.uniqueId, JobEnum.HUNTER)) return
-
-		Coin.dropCoin(event.entity.location)
-		Main.jobController.addExperienceAndAnnounce(player, JobEnum.HUNTER, 1)
+			if (Main.jobController.hasJob(player.uniqueId, JobEnum.HUNTER)) {
+				Coin.dropCoin(event.entity.location)
+				Main.jobController.addExperienceAndAnnounce(player, JobEnum.HUNTER, 1)
+			}
+		}
 	}
 }

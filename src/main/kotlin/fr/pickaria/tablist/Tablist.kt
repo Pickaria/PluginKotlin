@@ -24,6 +24,9 @@ fun playerList(plugin: Main) {
 			val onlinePlayers = server.onlinePlayers
 			val player = event?.player ?: return
 
+			val prefix = Main.chat.getPlayerPrefix(player).replace("&", "§")
+			player.setDisplayName("$prefix${player.name}")
+
 			// Build header and footer of player list
 			val container = PacketContainer(PacketType.Play.Server.PLAYER_LIST_HEADER_FOOTER)
 
