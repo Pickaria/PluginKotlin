@@ -80,34 +80,34 @@ class Main: SuspendingJavaPlugin() {
 		}
 
 		setupChat()
-		server.pluginManager.registerEvents(PlayerJoin(), this)
-		server.pluginManager.registerEvents(ChatFormat(), this)
-		server.pluginManager.registerEvents(Motd(), this)
+		server.pluginManager.let{
+			it.registerEvents(PlayerJoin(), this)
+			it.registerEvents(ChatFormat(), this)
+			it.registerEvents(Motd(), this)
 
-		// Spawners
-		server.pluginManager.registerEvents(Anvil(), this)
-		server.pluginManager.registerEvents(CollectSpawner(), this)
+			// Spawners
+			it.registerEvents(Anvil(), this)
+			it.registerEvents(CollectSpawner(), this)
+		}
 
 		server.logger.info("Pickaria plugin enabled")
 	}
 
 	private fun setupEconomy(): Boolean {
-		if (server.pluginManager.getPlugin("Vault") == null) {
+		server.pluginManager.getPlugin("Vault") ?: run{
 			logger.warning("VaultAPI not found, economy is not available")
 			return false
 		}
 
-		val rsp = server.servicesManager.getRegistration(Economy::class.java)
-
-		if (rsp == null) {
+		server.servicesManager.getRegistration(Economy::class.java)?.let {
+			economy = it.provider
+			logger.info("Third party plugin is handling economy")
+		} ?: let{
 			economy = PickariaEconomy(this)
 			Bukkit.getServicesManager().register(Economy::class.java, economy, this, ServicePriority.Normal)
 			server.pluginManager.registerSuspendingEvents(economy as PickariaEconomy, this)
 
 			logger.info("Pickaria is handling economy")
-		} else {
-			economy = rsp.provider
-			logger.info("Third party plugin is handling economy")
 		}
 		return true
 	}

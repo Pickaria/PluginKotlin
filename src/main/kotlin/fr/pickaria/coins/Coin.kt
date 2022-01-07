@@ -49,10 +49,15 @@ class Coin: Listener {
 
 			val itemMeta = itemStack.itemMeta
 			itemMeta?.setDisplayName("§6Coin")
+			//itemMeta!!.setDisplayName("§6Coin")
 			val lore = itemMeta?.lore ?: ArrayList()
+			//val lore = itemMeta.lore ?: ArrayList()
 			lore.add("§7Valeur : §6${Main.economy.format(amount)}")
 			itemMeta?.lore = lore
+			//itemMeta.lore = lore
 			itemStack.itemMeta = itemMeta
+
+			//TESTER SI !! fonctionne bien sur itemMeta
 
 			val coin = CraftItemStack.asNMSCopy(itemStack)
 			val compound = coin.t() // Get compound or create if null
@@ -66,12 +71,15 @@ class Coin: Listener {
 		private fun getCoinValue(itemStack: ItemStack): Double {
 			val coin = CraftItemStack.asNMSCopy(itemStack)
 			val compound = coin.t()
-			return try {
+
+			return (compound.c("value") as? NBTTagDouble)?.i() ?: 0.0
+			// TODO TEST
+			/*return try {
 				val tag = compound.c("value")!! as NBTTagDouble // Get tag
 				tag.i() // Get Double
 			} catch (_: NullPointerException) {
 				0.0
-			}
+			}*/
 		}
 
 		private fun setCoinValue(itemStack: ItemStack, amount: Double): ItemStack {
@@ -85,12 +93,15 @@ class Coin: Listener {
 		private fun isCoin(itemStack: ItemStack): Boolean {
 			val coin = CraftItemStack.asNMSCopy(itemStack)
 			val compound = coin.t()
-			return try {
+
+			return (compound.c("isCoin") as? NBTTagByte)?.h() == (1).toByte()
+			// TODO TEST
+			/*return try {
 				val tag = compound.c("isCoin")!! as NBTTagByte // Get tag
 				tag.h() == (1).toByte() // Is equals to 1
 			} catch (_: NullPointerException) {
 				false
-			}
+			}*/
 		}
 	}
 
@@ -140,9 +151,7 @@ class Coin: Listener {
 	@EventHandler
 	fun onInventoryPickupItem(event: PlayerDropItemEvent) {
 		if (isCoin(event.itemDrop.itemStack)) {
-			val amount = getCoinValue(event.itemDrop.itemStack)
-
-			event.itemDrop.customName = Main.economy.format(amount)
+			event.itemDrop.customName = Main.economy.format(getCoinValue(event.itemDrop.itemStack))
 			event.itemDrop.isCustomNameVisible = true
 		}
 	}

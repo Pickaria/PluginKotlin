@@ -36,15 +36,17 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	override val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<JobEnum, Job>> = ConcurrentHashMap()
 
 	init {
-		getServer().pluginManager.registerSuspendingEvents(this, plugin)
+		getServer().pluginManager.run {
+			registerSuspendingEvents(this@JobController, plugin)
 
-		getServer().pluginManager.registerEvents(Miner(), plugin)
-		getServer().pluginManager.registerEvents(Hunter(), plugin)
-		getServer().pluginManager.registerEvents(Farmer(), plugin)
-		getServer().pluginManager.registerEvents(Breeder(), plugin)
-		getServer().pluginManager.registerEvents(Alchemist(), plugin)
-		getServer().pluginManager.registerEvents(Wizard(), plugin)
-		getServer().pluginManager.registerEvents(Trader(), plugin)
+			registerEvents(Miner(), plugin)
+			registerEvents(Hunter(), plugin)
+			registerEvents(Farmer(), plugin)
+			registerEvents(Breeder(), plugin)
+			registerEvents(Alchemist(), plugin)
+			registerEvents(Wizard(), plugin)
+			registerEvents(Trader(), plugin)
+		}
 
 		// Write cache to database every 10 minutes
 		object : BukkitRunnable() {
@@ -92,9 +94,7 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 		return job != null && job.active
 	}
 
-	fun jobCount(playerUuid: UUID): Int {
-		return getFromCache(playerUuid)?.filter { it.value.active }?.size ?: 0
-	}
+	fun jobCount(playerUuid: UUID): Int = getFromCache(playerUuid)?.filter { it.value.active }?.size ?: 0
 
 	fun getCooldown(playerUuid: UUID, jobName: JobEnum): Int {
 		val previousDay = LocalDateTime.now().minusHours(COOLDOWN)
@@ -136,13 +136,9 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 		}
 	}
 
-	fun getExperienceFromLevel(level: Int): Int {
-		return ((level.toDouble().pow(2.0) + level) / 2).toInt()
-	}
+	fun getExperienceFromLevel(level: Int): Int = ((level.toDouble().pow(2.0) + level) / 2).toInt()
 
-	fun getLevelFromExperience(experience: Int): Int {
-		return floor(0.5 * (sqrt(8.0 * experience + 1.0) - 1)).toInt()
-	}
+	fun getLevelFromExperience(experience: Int): Int = floor(0.5 * (sqrt(8.0 * experience + 1.0) - 1)).toInt()
 
 	fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
 		return getFromCache(playerUuid, jobName)?.let {
@@ -158,13 +154,11 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	}
 
 	fun addExperienceAndAnnounce(player: Player, jobName: JobEnum, exp: Int): JobErrorEnum {
-		val res = addExperience(player.uniqueId, jobName, exp)
-
-		if (res == JobErrorEnum.NEW_LEVEL) {
-			val job = getFromCache(player.uniqueId, jobName)!!
-			player.sendMessage("§7Vous montez niveau §6${getLevelFromExperience(job.level)}§7 dans le métier §6${jobName.label}§7.")
+		return addExperience(player.uniqueId, jobName, exp).also {
+			if (it == JobErrorEnum.NEW_LEVEL) {
+				val job = getFromCache(player.uniqueId, jobName)!!
+				player.sendMessage("§7Vous montez niveau §6${getLevelFromExperience(job.level)}§7 dans le métier §6${jobName.label}§7.")
+			}
 		}
-
-		return res
 	}
 }
