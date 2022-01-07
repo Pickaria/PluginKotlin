@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
@@ -23,11 +22,18 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt")
+
+    // Database
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("org.ktorm:ktorm-core:3.4.1")
     implementation("org.ktorm:ktorm-support-postgresql:3.4.1")
 
-    compileOnly("org.spigotmc:spigot:1.18-R0.1-SNAPSHOT")
+    implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:1.5.0")
+    implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:1.5.0")
+
+    compileOnly("org.spigotmc:spigot:1.18.1-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")
@@ -37,10 +43,6 @@ dependencies {
 
 tasks.withType<KotlinCompile>{
     kotlinOptions.jvmTarget = "17"
-}
-
-kotlin {
-    experimental.coroutines = Coroutines.ENABLE
 }
 
 tasks.withType<ShadowJar>{

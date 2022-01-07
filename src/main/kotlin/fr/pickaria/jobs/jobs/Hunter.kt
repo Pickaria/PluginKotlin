@@ -1,7 +1,7 @@
 package fr.pickaria.jobs.jobs
 
+import fr.pickaria.Main
 import fr.pickaria.coins.Coin
-import fr.pickaria.jobs.JobController
 import fr.pickaria.jobs.JobEnum
 import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
@@ -40,9 +40,9 @@ class Hunter: Listener {
 		if (!isHostile(event.entity) || fromSpawner(event.entity)) return
 
 		val player = event.entity.killer ?: return
-		if (!JobController.hasJob(player.uniqueId, JobEnum.HUNTER)) return
+		if (!Main.jobController.hasJob(player.uniqueId, JobEnum.HUNTER)) return
 
 		Coin.dropCoin(event.entity.location)
-		JobController.addExperience(player.uniqueId, JobEnum.HUNTER, 1)
+		Main.jobController.addExperienceAndAnnounce(player, JobEnum.HUNTER, 1)
 	}
 }

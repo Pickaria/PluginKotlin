@@ -4,7 +4,6 @@ import fr.pickaria.Main
 import net.milkbowl.vault.economy.EconomyResponse
 import org.bukkit.Bukkit.getLogger
 import org.bukkit.Bukkit.getServer
-import org.bukkit.Color
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender

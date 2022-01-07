@@ -1,77 +1,118 @@
 package fr.pickaria.jobs
 
+import com.github.shynixn.mccoroutine.registerSuspendingEvents
 import fr.pickaria.Main
-import fr.pickaria.jobs.jobs.Breeder
-import fr.pickaria.jobs.jobs.Farmer
-import fr.pickaria.jobs.jobs.Hunter
-import fr.pickaria.jobs.jobs.Miner
+import fr.pickaria.jobs.jobs.*
 import fr.pickaria.model.Job
 import fr.pickaria.model.job
+import fr.pickaria.utils.DoubleCache
+import org.bukkit.Bukkit
 import org.bukkit.Bukkit.getServer
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.scheduler.BukkitRunnable
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
-import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.*
-import kotlin.collections.HashMap
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
-class JobController(plugin: Main) {
+class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
+	companion object {
+		const val MAX_JOBS = 1
+		const val COOLDOWN = 24L
+	}
+
+	override val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<JobEnum, Job>> = ConcurrentHashMap()
+
 	init {
+		getServer().pluginManager.registerSuspendingEvents(this, plugin)
+
 		getServer().pluginManager.registerEvents(Miner(), plugin)
 		getServer().pluginManager.registerEvents(Hunter(), plugin)
 		getServer().pluginManager.registerEvents(Farmer(), plugin)
 		getServer().pluginManager.registerEvents(Breeder(), plugin)
+		getServer().pluginManager.registerEvents(Alchemist(), plugin)
+		getServer().pluginManager.registerEvents(Wizard(), plugin)
+		getServer().pluginManager.registerEvents(Trader(), plugin)
+
+		// Write cache to database every 10 minutes
+		object : BukkitRunnable() {
+			override fun run() {
+				flushAllEntities { uuid, account ->
+					Bukkit.getLogger().severe("Cannot flush job ${account.job} of $uuid with level : ${account.level}")
+				}
+			}
+		}.runTaskTimerAsynchronously(plugin, 12000, 12000 /* 10 minutes */)
 	}
 
-	companion object {
-		private val playerJobs = HashMap<UUID, JobEnum>()
-		const val MAX_JOBS = 1
-		const val COOLDOWN = 24L
+	@EventHandler
+	override suspend fun onPlayerJoin(event: PlayerJoinEvent) {
+		getFromCache(event.player.uniqueId)
+	}
 
-		fun hasJob(playerUuid: UUID, jobName: JobEnum): Boolean {
-			if (playerJobs.contains(playerUuid)) {
-				if (playerJobs[playerUuid] == jobName) return true // Get from cache
-				return false
+	override fun getFromCache(uniqueId: UUID, key: JobEnum): Job? =
+		cache[uniqueId]?.get(key)
+			?: Main.database.job.find { (it.playerUniqueId eq uniqueId) and (it.job eq key.name) }?.let {
+				cache[uniqueId]?.set(key, it) ?: run {
+					cache[uniqueId] = ConcurrentHashMap()
+					cache[uniqueId]?.put(key, it)
+				}
+				cache[uniqueId]?.get(key)
 			}
 
-			return try {
-				val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active }!!
-				playerJobs[playerUuid] = JobEnum.valueOf(job.job) // Save in cache
-				job.active
-			} catch (_: NullPointerException) {
-				false
-			}
+	override fun getFromCache(uniqueId: UUID): ConcurrentHashMap<JobEnum, Job>? {
+		return if (cache.containsKey(uniqueId)) {
+			cache[uniqueId]
+		} else {
+			val jobs = ConcurrentHashMap<JobEnum, Job>()
+
+			Main.database.job.filter { it.playerUniqueId eq uniqueId }
+				.forEach {
+					jobs[JobEnum.valueOf(it.job)] = it
+				}
+
+			cache[uniqueId] = jobs
+			cache[uniqueId]
 		}
+	}
 
-		fun getJobs(playerUuid: UUID): List<Job> {
-			return Main.database.job.filter { it.playerUniqueId eq playerUuid and it.active }.toList()
+	fun hasJob(playerUuid: UUID, jobName: JobEnum): Boolean {
+		val job = getFromCache(playerUuid, jobName)
+		return job != null && job.active
+	}
+
+	fun jobCount(playerUuid: UUID): Int {
+		return getFromCache(playerUuid)?.filter { it.value.active }?.size ?: 0
+	}
+
+	fun getCooldown(playerUuid: UUID, jobName: JobEnum): Int {
+		val previousDay = LocalDateTime.now().minusHours(COOLDOWN)
+
+		val job = getFromCache(playerUuid, jobName)
+		return if (job == null || !job.active) {
+			0
+		} else {
+			val local = LocalDateTime.ofInstant(job.lastUsed, ZoneOffset.systemDefault())
+			previousDay.until(local, ChronoUnit.HOURS).hours.toInt(DurationUnit.HOURS)
 		}
+	}
 
-		fun jobCount(playerUuid: UUID): Int {
-			return Main.database.job.filter { it.playerUniqueId eq playerUuid and it.active }.totalRecords
-		}
-
-		fun getCooldown(playerUuid: UUID, jobName: JobEnum): Int {
-			val previousDay = LocalDateTime.now().minusHours(COOLDOWN)
-
-			val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) }
-			return if (job == null || !job.active) {
-				0
-			} else {
-				val local = LocalDateTime.ofInstant(job.lastUsed, ZoneOffset.systemDefault())
-				previousDay.until(local, ChronoUnit.HOURS).hours.toInt(DurationUnit.HOURS)
-			}
-		}
-
-		fun joinJob(playerUuid: UUID, jobName: JobEnum): Boolean {
+	fun joinJob(playerUuid: UUID, jobName: JobEnum) {
+		getFromCache(playerUuid, jobName)?.let {
+			it.active = true
+			it.lastUsed = Instant.now()
+		} ?: run {
 			val job = Job {
 				playerUniqueId = playerUuid
 				job = jobName.name
@@ -79,70 +120,51 @@ class JobController(plugin: Main) {
 				lastUsed = Instant.now()
 			}
 
-			// Set current as "active" = true
-			// try {
-			// 	 insert into job (player_uuid, job, active) values ('$playerUuid', '${newJob.name}', true)
-			// } catch {
-			// 	  on conflict (player_uuid, job) do update set active = true, last_used = now()
-			// }
+			Main.database.job.add(job)
 
-			playerJobs.remove(playerUuid) // Invalidate cache
-
-			return try {
-				Main.database.job.add(job) > 0
-			} catch (e: SQLException) {
-				Main.database.job.update(job) > 0
+			cache[playerUuid]?.set(jobName, job) ?: run {
+				cache[playerUuid] = ConcurrentHashMap()
+				cache[playerUuid]?.set(jobName, job)
 			}
 		}
+	}
 
-		fun leaveJob(playerUuid: UUID, jobName: JobEnum): JobErrorEnum {
-			val job = Main.database.job.find { (it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) }
-			if (job == null || !job.active) {
-				return JobErrorEnum.NOT_EXERCICE
-			}
+	fun leaveJob(playerUuid: UUID, jobName: JobEnum) {
+		getFromCache(playerUuid, jobName)?.let {
+			it.active = false
+			it.level = (it.level * 0.8).toInt()
+		}
+	}
 
-			if (getCooldown(playerUuid, jobName) > 0) {
-				return JobErrorEnum.COOLDOWN
-			}
+	fun getExperienceFromLevel(level: Int): Int {
+		return ((level.toDouble().pow(2.0) + level) / 2).toInt()
+	}
 
-			job.active = false
-			job.level = (job.level * 0.8).toInt()
+	fun getLevelFromExperience(experience: Int): Int {
+		return floor(0.5 * (sqrt(8.0 * experience + 1.0) - 1)).toInt()
+	}
 
-			playerJobs.remove(playerUuid) // Invalidate cache
+	fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
+		return getFromCache(playerUuid, jobName)?.let {
+			val previousLevel = getLevelFromExperience(it.level)
+			it.level += exp
 
-			return if (job.flushChanges() > 0) {
-				JobErrorEnum.JOB_LEFT
+			if (getLevelFromExperience(it.level) > previousLevel) {
+				JobErrorEnum.NEW_LEVEL
 			} else {
-				JobErrorEnum.UNKNOWN
+				JobErrorEnum.NOTHING
 			}
+		} ?: JobErrorEnum.NOTHING
+	}
+
+	fun addExperienceAndAnnounce(player: Player, jobName: JobEnum, exp: Int): JobErrorEnum {
+		val res = addExperience(player.uniqueId, jobName, exp)
+
+		if (res == JobErrorEnum.NEW_LEVEL) {
+			val job = getFromCache(player.uniqueId, jobName)!!
+			player.sendMessage("§7Vous montez niveau §6${getLevelFromExperience(job.level)}§7 dans le métier §6${jobName.label}§7.")
 		}
 
-		fun getExperienceFromLevel(level: Int): Int {
-			return ((level.toDouble().pow(2.0) + level) / 2).toInt()
-		}
-
-		fun getLevelFromExperience(experience: Int): Int {
-			return floor(0.5 * (sqrt(8.0 * experience + 1.0) - 1)).toInt()
-		}
-
-		fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
-			return try {
-				val job = Main.database.job.find {
-					(it.job eq jobName.name) and (it.playerUniqueId eq playerUuid) and it.active
-				}!!
-				val previousLevel = getLevelFromExperience(job.level)
-				job.level += exp
-				job.flushChanges()
-				if (getLevelFromExperience(job.level + exp) > previousLevel) {
-					println(previousLevel)
-					println(getLevelFromExperience(job.level + exp))
-					JobErrorEnum.NEW_LEVEL
-				} else {
-					JobErrorEnum.NOTHING
-				}
-			} catch (_: java.lang.NullPointerException) {
-				JobErrorEnum.NOT_EXERCICE
-			}
-		}
+		return res
 	}
 }

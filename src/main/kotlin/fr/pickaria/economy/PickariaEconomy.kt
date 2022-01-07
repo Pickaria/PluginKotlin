@@ -1,22 +1,61 @@
 package fr.pickaria.economy
 
 import fr.pickaria.Main
-import fr.pickaria.model.EconomyModel
+import fr.pickaria.asyncFlushChanges
+import fr.pickaria.model.Economy
 import fr.pickaria.model.economy
+import fr.pickaria.utils.Cache
 import net.milkbowl.vault.economy.AbstractEconomy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
-import org.bukkit.Bukkit.getServer
+import org.bukkit.Bukkit.*
 import org.bukkit.OfflinePlayer
+import org.bukkit.event.EventHandler
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.scheduler.BukkitRunnable
 import org.ktorm.dsl.*
-import org.ktorm.entity.add
 import org.ktorm.entity.find
 import java.text.DecimalFormat
-import fr.pickaria.model.Economy
+import java.util.*
+import org.ktorm.entity.add
+import java.util.concurrent.ConcurrentHashMap
 
 
-class PickariaEconomy : AbstractEconomy() {
-	override fun isEnabled() = true
+class PickariaEconomy(plugin: Main) : AbstractEconomy(), Cache<Economy> {
+	private var enabled: Boolean = false
+	override val cache: ConcurrentHashMap<UUID, Economy> = ConcurrentHashMap()
+
+	init {
+		enabled = true
+
+		// Write cache to database every 10 minutes
+		object : BukkitRunnable() {
+			override fun run() {
+				flushAllEntities { uuid, account ->
+					getLogger().severe("Cannot flush account of $uuid with balance: ${account.balance}")
+				}
+			}
+		}.runTaskTimerAsynchronously(plugin, 12000, 12000 /* 10 minutes */)
+	}
+
+	override fun isEnabled() = enabled
+
+	// Cache methods
+	@EventHandler
+	override suspend fun onPlayerJoin(event: PlayerJoinEvent) {
+		val uniqueId = event.player.uniqueId
+		Main.database.economy.find { it.playerUniqueId eq uniqueId }?.also {
+			cache.putIfAbsent(uniqueId, it)
+		} ?: createPlayerAccount(event.player)
+	}
+
+	override fun getFromCache(uniqueId: UUID): Economy? =
+		cache[uniqueId] ?: Main.database.economy.find { it.playerUniqueId eq uniqueId }?.let {
+			cache[uniqueId] = it
+			it
+		}
+
+	// Constants methods
 
 	override fun getName() = "Pickaria economy"
 
@@ -34,67 +73,91 @@ class PickariaEconomy : AbstractEconomy() {
 
 	override fun currencyNameSingular() = "$"
 
+	// Logic methods
+
 	override fun hasAccount(player: OfflinePlayer): Boolean {
-		return Main.database
-			.from(EconomyModel)
-			.select()
-			.where { EconomyModel.playerUniqueId eq player.uniqueId }
-			.totalRecords > 0
-	}
-
-	override fun hasAccount(playerName: String?): Boolean {
-		return playerName?.let {
-			hasAccount(getServer().getOfflinePlayer(playerName))
-		} ?: false
-	}
-
-	override fun hasAccount(playerName: String?, worldName: String?): Boolean {
-		return hasAccount(playerName)
+		return getFromCache(player.uniqueId) != null
 	}
 
 	override fun getBalance(player: OfflinePlayer): Double {
-		return Main.database.economy.find { it.playerUniqueId eq player.uniqueId }?.balance ?: 0.0
-	}
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
+		}
 
-	override fun getBalance(playerName: String?): Double {
-		return playerName?.let {
-			getBalance(getServer().getOfflinePlayer(playerName))
-		} ?: 0.0
-	}
-
-	override fun getBalance(playerName: String?, world: String?): Double {
-		return getBalance(playerName)
+		return getFromCache(player.uniqueId)?.balance ?: 0.0
 	}
 
 	override fun has(player: OfflinePlayer, amount: Double): Boolean {
 		return getBalance(player) >= amount
 	}
 
-	override fun has(playerName: String?, amount: Double): Boolean {
-		return playerName?.let {
-			has(getServer().getOfflinePlayer(playerName), amount)
-		} ?: false
-	}
-
-	override fun has(playerName: String?, worldName: String?, amount: Double): Boolean {
-		return has(playerName, amount)
-	}
-
 	override fun withdrawPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
+		}
+
 		val balance = getBalance(player)
 
-		val rows = Main.database.update(EconomyModel) {
-			set(it.balance, it.balance - amount)
-			where {
-				it.playerUniqueId eq player.uniqueId
+		return try {
+			val account = getFromCache(player.uniqueId)!!
+			account.balance -= amount
+
+			if (!player.isOnline) {
+				account.asyncFlushChanges()
 			}
+
+			EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
+		} catch (_: NullPointerException) {
+			EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
+		}
+	}
+
+	override fun depositPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
+		if (!hasAccount(player)) {
+			createPlayerAccount(player)
 		}
 
-		if (rows > 0) {
-			return EconomyResponse(amount, balance, ResponseType.SUCCESS, "")
+		val balance = getBalance(player)
+
+		return try {
+			val account = getFromCache(player.uniqueId)!!
+			account.balance += amount
+
+			if (!player.isOnline) {
+				account.asyncFlushChanges()
+			}
+
+			EconomyResponse(amount, balance - amount, ResponseType.SUCCESS, "")
+		} catch (_: NullPointerException) {
+			EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
+		}
+	}
+
+	override fun createPlayerAccount(player: OfflinePlayer): Boolean {
+		if (!player.isOnline) return false
+
+		val account = Economy {
+			playerUniqueId = player.uniqueId
+			balance = 0.0
 		}
 
-		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
+		cache[player.uniqueId] = account
+		Main.database.economy.add(account)
+		account.asyncFlushChanges()
+
+		return true
+	}
+
+	// Compatibility methods
+
+	override fun depositPlayer(playerName: String?, amount: Double): EconomyResponse {
+		return playerName?.let {
+			depositPlayer(getServer().getOfflinePlayer(playerName), amount)
+		} ?: EconomyResponse(amount, 0.0, ResponseType.FAILURE, "Player not found")
+	}
+
+	override fun depositPlayer(playerName: String?, worldName: String?, amount: Double): EconomyResponse {
+		return depositPlayer(playerName, amount)
 	}
 
 	override fun withdrawPlayer(playerName: String?, amount: Double): EconomyResponse {
@@ -107,40 +170,34 @@ class PickariaEconomy : AbstractEconomy() {
 		return withdrawPlayer(playerName, amount)
 	}
 
-	override fun depositPlayer(player: OfflinePlayer, amount: Double): EconomyResponse {
-		val balance = getBalance(player)
-
-		val rows = Main.database.update(EconomyModel) {
-			set(it.balance, it.balance + amount)
-			where {
-				it.playerUniqueId eq player.uniqueId
-			}
-		}
-
-		if (rows > 0) {
-			return EconomyResponse(amount, balance, ResponseType.SUCCESS, "")
-		}
-
-		return EconomyResponse(0.0, balance, ResponseType.FAILURE, "")
-	}
-
-	override fun depositPlayer(playerName: String?, amount: Double): EconomyResponse {
+	override fun has(playerName: String?, amount: Double): Boolean {
 		return playerName?.let {
-			depositPlayer(getServer().getOfflinePlayer(playerName), amount)
-		} ?: EconomyResponse(amount, 0.0, ResponseType.FAILURE, "Player not found")
+			has(getServer().getOfflinePlayer(playerName), amount)
+		} ?: false
 	}
 
-	override fun depositPlayer(playerName: String?, worldName: String?, amount: Double): EconomyResponse {
-		return depositPlayer(playerName, amount)
+	override fun has(playerName: String?, worldName: String?, amount: Double): Boolean {
+		return has(playerName, amount)
 	}
 
-	override fun createPlayerAccount(player: OfflinePlayer): Boolean {
-		val account = Economy {
-			playerUniqueId = player.uniqueId
-			balance = 0.0
-		}
+	override fun getBalance(playerName: String?): Double {
+		return playerName?.let {
+			getBalance(getServer().getOfflinePlayer(playerName))
+		} ?: 0.0
+	}
 
-		return Main.database.economy.add(account) > 0
+	override fun getBalance(playerName: String?, world: String?): Double {
+		return getBalance(playerName)
+	}
+
+	override fun hasAccount(playerName: String?): Boolean {
+		return playerName?.let {
+			hasAccount(getServer().getOfflinePlayer(playerName))
+		} ?: false
+	}
+
+	override fun hasAccount(playerName: String?, worldName: String?): Boolean {
+		return hasAccount(playerName)
 	}
 
 	override fun createPlayerAccount(playerName: String?): Boolean {
@@ -152,6 +209,8 @@ class PickariaEconomy : AbstractEconomy() {
 	override fun createPlayerAccount(playerName: String?, worldName: String?): Boolean {
 		return createPlayerAccount(playerName)
 	}
+
+	// Bank methods
 
 	override fun hasBankSupport() = false
 
