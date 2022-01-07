@@ -59,8 +59,6 @@ class Main: SuspendingJavaPlugin() {
 			server.logger.severe("An error occurred while trying to connect to the database, some features may not function properly")
 		}
 
-		server.pluginManager.registerEvents(Test(), this)
-
 		// Economy
 		if (setupEconomy()) {
 			// Economy commands
