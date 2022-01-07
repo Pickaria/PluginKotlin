@@ -16,7 +16,9 @@ class ChatFormat: Listener {
 		val playerToRemove = mutableListOf<Player>()
 
 		for (player in e.recipients) {
-			if (e.message.lowercase().contains(player.name.lowercase())) {
+			val pos = e.message.lowercase().indexOf(player.name.lowercase())
+
+			if (pos >= 0) {
 				playerToRemove.add(player)
 				player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f)
 
@@ -24,7 +26,7 @@ class ChatFormat: Listener {
 					String.format(
 						e.format,
 						e.player.displayName,
-						e.message.replace(player.name, String.format("§6%s§r", player.name))
+						e.message.replaceRange(pos, pos + player.name.length, "§6${player.name}§7")
 					)
 				)
 			}
