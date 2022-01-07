@@ -40,7 +40,7 @@ class PayCommand : CommandExecutor, TabCompleter {
 			}
 
 			if (amount <= 0.01) {
-				sender.sendMessage("§cLe montant doit être supérieure à 0.01.")
+				sender.sendMessage("§cLe montant doit être supérieur à 0.01.")
 				return true
 			}
 
