@@ -33,14 +33,14 @@ class PayCommand : CommandExecutor, TabCompleter {
 			val amount = try {
 				args[1].toDouble()
 			} catch (_: NumberFormatException) {
-				sender.sendMessage("§cLa valeur que vous avez entrée n'est pas un chiffre.")
+				sender.sendMessage("§cLa valeur que vous avez entrée n'est pas un nombre.")
 				return true
 			} catch (_: ArrayIndexOutOfBoundsException) {
 				return false
 			}
 
 			if (amount <= 0.01) {
-				sender.sendMessage("§cLe montant doit être suppérieure à 0.01.")
+				sender.sendMessage("§cLe montant doit être supérieure à 0.01.")
 				return true
 			}
 
