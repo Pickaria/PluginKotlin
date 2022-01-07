@@ -6,7 +6,10 @@ import com.comphenix.protocol.events.ListenerPriority
 import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.events.PacketEvent
+import com.comphenix.protocol.wrappers.EnumWrappers
+import com.comphenix.protocol.wrappers.PlayerInfoData
 import com.comphenix.protocol.wrappers.WrappedChatComponent
+import com.comphenix.protocol.wrappers.WrappedGameProfile
 import fr.pickaria.Main
 import org.bukkit.Bukkit.getServer
 import java.text.DecimalFormat
@@ -21,14 +24,29 @@ fun playerList(plugin: Main) {
 
 	manager.addPacketListener(object : PacketAdapter(plugin, ListenerPriority.NORMAL, PacketType.Play.Server.PLAYER_INFO) {
 		override fun onPacketSending(event: PacketEvent?) {
-			val onlinePlayers = server.onlinePlayers
-			val player = event?.player ?: return
+			val packet = event?.packet ?: return
 
-			val prefix = Main.chat.getPlayerPrefix(player).replace("&", "§")
-			player.setDisplayName("$prefix${player.name}")
+			val onlinePlayers = server.onlinePlayers
+			val playerList = packet.playerInfoDataLists.read(0)
+
+			playerList.forEachIndexed { index, playerInfoData ->
+				server.getPlayer(playerInfoData.profile.uuid)?.let {
+					val gameMode = EnumWrappers.NativeGameMode.fromBukkit(it.gameMode)
+					val displayName = WrappedChatComponent.fromText(it.displayName)
+
+					val gameProfile = WrappedGameProfile(it.uniqueId, it.name)
+					val newInfoData = PlayerInfoData(gameProfile, it.ping, gameMode, displayName)
+
+					playerList[index] = newInfoData
+				}
+			}
+
+			packet.playerInfoDataLists.write(0, playerList)
 
 			// Build header and footer of player list
 			val container = PacketContainer(PacketType.Play.Server.PLAYER_LIST_HEADER_FOOTER)
+
+			val player = event.player
 
 			val ticks = world.time;
 			val hours = formatter.format((ticks / 1000 + 6) % 24)
