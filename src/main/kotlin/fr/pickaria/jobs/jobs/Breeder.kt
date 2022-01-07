@@ -13,15 +13,17 @@ import org.bukkit.event.entity.EntityTameEvent
 class Breeder: Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onEntityBreed(event: EntityBreedEvent) {
-		val player = event.breeder as Player
-		if (!Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
+		if (event.breeder is Player) {
+			val player = event.breeder as Player
+			if (!Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
-		Coin.dropCoin(event.entity.location, 1.0)
-		Main.jobController.addExperienceAndAnnounce(player, JobEnum.BREEDER, 1)
+			Coin.dropCoin(event.entity.location, 1.0)
+			Main.jobController.addExperienceAndAnnounce(player, JobEnum.BREEDER, 1)
+		}
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
-	fun onEntityBreed(event: EntityTameEvent) {
+	fun onEntityTame(event: EntityTameEvent) {
 		val player = event.owner as Player
 		if (!Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
