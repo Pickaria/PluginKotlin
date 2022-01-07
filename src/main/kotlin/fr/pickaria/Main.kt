@@ -71,18 +71,18 @@ class Main: SuspendingJavaPlugin() {
 			val jobCommand = JobCommand()
 			getCommand("job")?.setExecutor(jobCommand) ?: server.logger.warning("Command job could not be registered")
 			getCommand("jobs")?.setExecutor(jobCommand) ?: server.logger.warning("Command job could not be registered")
-			server.pluginManager.registerEvents(Coin(), this)
+			server.pluginManager.registerEvents(Coin(this), this)
 
 			// Votes
-			server.pluginManager.registerEvents(VoteListener(), this)
-			getCommand("vote")?.setExecutor(VoteCommand(this)) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			//server.pluginManager.registerEvents(VoteListener(), this)
+			//getCommand("vote")?.setExecutor(VoteCommand(this)) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 
 			// Player list
 			playerList(this)
 		}
 
-		setupChat()
-		server.pluginManager.let{
+		//setupChat()
+		/*server.pluginManager.let{
 			it.registerEvents(PlayerJoin(), this)
 			it.registerEvents(ChatFormat(), this)
 			it.registerEvents(Motd(), this)
@@ -90,7 +90,7 @@ class Main: SuspendingJavaPlugin() {
 			// Spawners
 			it.registerEvents(Anvil(), this)
 			it.registerEvents(CollectSpawner(), this)
-		}
+		}*/
 
 		server.logger.info("Pickaria plugin enabled")
 	}
