@@ -25,12 +25,13 @@ import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
 
 class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	companion object {
 		const val MAX_JOBS = 1
-		const val COOLDOWN = 24L
+		const val COOLDOWN = 1L
 	}
 
 	override val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<JobEnum, Job>> = ConcurrentHashMap()
@@ -104,7 +105,7 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 			0
 		} else {
 			val local = LocalDateTime.ofInstant(job.lastUsed, ZoneOffset.systemDefault())
-			previousDay.until(local, ChronoUnit.HOURS).hours.toInt(DurationUnit.HOURS)
+			previousDay.until(local, ChronoUnit.MINUTES).minutes.toInt(DurationUnit.MINUTES)
 		}
 	}
 

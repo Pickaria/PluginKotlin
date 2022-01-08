@@ -51,7 +51,7 @@ class JobCommand : CommandExecutor, TabCompleter {
 						val cooldown = Main.jobController.getCooldown(sender.uniqueId, job)
 
 						if (cooldown > 0) {
-							sender.sendMessage("§cVous devez attendre $cooldown heures avant de changer de métier.")
+							sender.sendMessage("§cVous devez attendre $cooldown minutes avant de changer de métier.")
 						} else {
 							Main.jobController.joinJob(sender.uniqueId, job)
 							sender.sendMessage("§7Vous avez rejoint le métier ${job.label}.")
@@ -65,7 +65,7 @@ class JobCommand : CommandExecutor, TabCompleter {
 						val cooldown = Main.jobController.getCooldown(sender.uniqueId, job)
 
 						if (cooldown > 0) {
-							sender.sendMessage("§cVous devez attendre $cooldown heures avant de changer de métier.")
+							sender.sendMessage("§cVous devez attendre $cooldown minutes avant de changer de métier.")
 						} else {
 							Main.jobController.leaveJob(sender.uniqueId, job)
 							sender.sendMessage("§7Vous avez quitté le métier ${job.label}.")
