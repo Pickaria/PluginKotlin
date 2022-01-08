@@ -33,7 +33,7 @@ import java.util.logging.Level
 class Main: SuspendingJavaPlugin() {
 	companion object {
 		lateinit var database: Database
-		lateinit var chat: Chat
+		var chat: Chat? = null
 		lateinit var economy: Economy
 		lateinit var jobController: JobController
 	}
@@ -82,8 +82,10 @@ class Main: SuspendingJavaPlugin() {
 		}
 
 		setupChat()
+
 		server.pluginManager.let{
 			it.registerEvents(PlayerJoin(), this)
+
 			it.registerEvents(ChatFormat(), this)
 			it.registerEvents(Motd(), this)
 
@@ -114,11 +116,14 @@ class Main: SuspendingJavaPlugin() {
 		return true
 	}
 
-	private fun setupChat() {
-		val rsp = server.servicesManager.getRegistration(
-			Chat::class.java
-		)
-		chat = rsp!!.provider
+	private fun setupChat(): Boolean {
+		return try {
+			val rsp = server.servicesManager.getRegistration(Chat::class.java)!!
+			chat = rsp.provider
+			true
+		} catch (_: NullPointerException) {
+			false
+		}
 	}
 
 	override fun onDisable() {
