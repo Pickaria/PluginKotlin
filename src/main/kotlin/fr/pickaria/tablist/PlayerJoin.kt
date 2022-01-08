@@ -10,8 +10,11 @@ class PlayerJoin : Listener {
 	@EventHandler
 	fun onPlayerJoin(event: PlayerJoinEvent) {
 		val player = event.player
-		val prefix = Main.chat.getPlayerPrefix(player).replace("&", "§")
-		player.setDisplayName("$prefix${player.name}")
+
+		Main.chat?.getPlayerPrefix(player)?.replace("&", "§")?.let {
+			player.setDisplayName("$it${player.name}")
+		}
+
 		event.joinMessage = "§7[§6+§7]§r ${player.displayName}"
 	}
 
