@@ -142,7 +142,7 @@ class Coin: Listener {
 		if (isCoin(event.itemInHand)) event.isCancelled = true
 	}
 
-	@EventHandler
+	/*@EventHandler
 	fun onPlayerDeath(event: PlayerDeathEvent) {
 		val player = event.entity
 		val balance = Main.economy.getBalance(player)
@@ -152,5 +152,5 @@ class Coin: Listener {
 		if (response.type == EconomyResponse.ResponseType.SUCCESS) {
 			dropCoin(player.location, response.amount)
 		}
-	}
+	}*/
 }

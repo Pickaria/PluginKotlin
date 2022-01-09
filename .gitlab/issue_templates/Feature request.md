@@ -1,2 +1,2 @@
-**Décrivez la fonctionnalité que vous souhaitez**  
+**Description de la fonctionnalité**  
 Une description claire et concise de ce que vous souhaitez sur le serveur.
