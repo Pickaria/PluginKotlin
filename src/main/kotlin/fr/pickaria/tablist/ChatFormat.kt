@@ -10,7 +10,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent
 class ChatFormat: Listener {
 	@EventHandler
 	fun onAsyncPlayerChat(e: AsyncPlayerChatEvent) {
-		e.format = "§f%1\$s » §7%2\$s"
+		e.format = "§f%1\$s > §7%2\$s"
 
 		// Player mention
 		val playerToRemove = mutableListOf<Player>()
