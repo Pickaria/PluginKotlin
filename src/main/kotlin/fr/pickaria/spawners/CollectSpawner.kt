@@ -6,6 +6,7 @@ import org.bukkit.Material
 import org.bukkit.block.CreatureSpawner
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
@@ -13,9 +14,9 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BlockStateMeta
 
 class CollectSpawner : Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     fun onBlockBreak(event: BlockBreakEvent) {
-        if (event.block.type != Material.SPAWNER) return
+        if (event.isCancelled || event.block.type != Material.SPAWNER) return
 
         if (event.player.inventory.itemInMainHand.getEnchantmentLevel(Enchantment.SILK_TOUCH) >= 2) {
             event.expToDrop = 0
