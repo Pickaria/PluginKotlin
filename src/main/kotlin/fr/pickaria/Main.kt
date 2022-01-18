@@ -117,13 +117,14 @@ class Main: SuspendingJavaPlugin() {
 	}
 
 	private fun setupChat(): Boolean {
-		return try {
-			val rsp = server.servicesManager.getRegistration(Chat::class.java)!!
-			chat = rsp.provider
-			true
-		} catch (_: NullPointerException) {
+		return server.servicesManager.getRegistration(Chat::class.java)?.let{
+			chat = it.provider
+			return true
+		} ?: run {
+			logger.warning("No chat provider found, some features may be disabled")
 			false
 		}
+
 	}
 
 	override fun onDisable() {

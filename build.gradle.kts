@@ -16,7 +16,7 @@ repositories {
 
     maven("https://repo.dmulloy2.net/repository/public/") // protocol lib
     maven("https://jitpack.io") // vault
-    maven("https://dl.bintray.com/nuvotifier/maven/") // votifier
+    //maven("https://dl.bintray.com/nuvotifier/maven/") // votifier
     maven("https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/") // langutils
 }
 
