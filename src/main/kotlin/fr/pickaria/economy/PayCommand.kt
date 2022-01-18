@@ -25,7 +25,7 @@ class PayCommand : CommandExecutor, TabCompleter {
 				return true
 			}
 
-			if (!recipient.hasPlayedBefore()) {
+			if (!recipient.isOnline && !recipient.hasPlayedBefore()) {
 				sender.sendMessage("§cCe joueur n'est jamais venu sur le serveur.")
 				return true
 			}
