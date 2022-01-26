@@ -17,6 +17,8 @@ class BaltopCommand : SuspendingCommandExecutor {
 		const val PAGE_SIZE = 8
 	}
 
+	private lateinit var top: List<Pair<String?, Double>>
+
 	override suspend fun onCommand(
 		sender: CommandSender,
 		command: Command,
@@ -39,7 +41,6 @@ class BaltopCommand : SuspendingCommandExecutor {
 			return true
 		}
 
-		val max = (min + PAGE_SIZE - 1).coerceAtMost(players.size - 1)
 		CoroutineScope(Dispatchers.Default).launch {
 			if (Main.economy is PickariaEconomy) {
 				with(Main.economy as PickariaEconomy) {
@@ -49,21 +50,32 @@ class BaltopCommand : SuspendingCommandExecutor {
 						Main.database.economy.forEach {
 							this.cache[it.playerUniqueId] = it
 						}
+
+						top = players.filter { Main.economy.hasAccount(it) }
+							.map { Pair(it.name, Main.economy.getBalance(it)) }
+							.sortedByDescending { it.second }
 					}
 				}
 			}
 
-			val component = TextComponent("§6==== Baltop (${page + 1}/${players.size / PAGE_SIZE + 1}) ====")
+			val maxPage = top.size / PAGE_SIZE
+			val component = TextComponent()
 
-			players.filter { Main.economy.hasAccount(it) }
-				.map { Pair(it.name, Main.economy.getBalance(it)) }
-				.sortedByDescending { it.second }
-				.slice(min..max)
-				.forEachIndexed { index, it ->
-					component.addExtra("\n§f${index + 1 + min}. §7${it.first}, ${Main.economy.format(it.second)}")
+			if (maxPage >= page) {
+				component.addExtra("§6==== Baltop (${page + 1}/${maxPage + 1}) ====")
+				val max = (min + PAGE_SIZE - 1).coerceAtMost(top.size - 1)
+
+				top.slice(min..max)
+					.forEachIndexed { index, it ->
+						component.addExtra("\n§f${index + 1 + min}. §7${it.first}, ${Main.economy.format(it.second)}")
+					}
+
+				if (maxPage != page) {
+					component.addExtra("\n§7Tapez §6/baltop ${page + 2}§7 pour lire la page suivante.")
 				}
-
-			component.addExtra("\n§7Tapez §6/baltop ${page + 2}§7 pour lire la page suivante.")
+			} else {
+				component.addExtra("§cIl n'y a pas autant de pages.")
+			}
 
 			sender.spigot().sendMessage(component)
 		}
