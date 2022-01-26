@@ -3,6 +3,7 @@ package fr.pickaria
 import com.github.shynixn.mccoroutine.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.registerSuspendingEvents
 import com.github.shynixn.mccoroutine.setSuspendingExecutor
+import fr.pickaria.chestLock.ChestLock
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
@@ -99,6 +100,7 @@ class Main: SuspendingJavaPlugin() {
 
 			// Menus
 			it.registerEvents(menuController, this)
+			it.registerEvents(ChestLock(), this)
 		}
 
 		server.logger.info("Pickaria plugin enabled")
