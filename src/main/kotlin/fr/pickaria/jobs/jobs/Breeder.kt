@@ -1,8 +1,8 @@
 package fr.pickaria.jobs.jobs
 
 import fr.pickaria.Main
-import fr.pickaria.coins.Coin
 import fr.pickaria.jobs.JobEnum
+import fr.pickaria.jobs.jobPayPlayer
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -15,9 +15,9 @@ class Breeder: Listener {
 	fun onEntityBreed(event: EntityBreedEvent) {
 		if (event.breeder is Player) {
 			val player = event.breeder as Player
-			if (!Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
+			if (event.isCancelled || !Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
-			Coin.dropCoin(event.entity.location, 1.0)
+			jobPayPlayer(player, 0.2, JobEnum.BREEDER)
 			Main.jobController.addExperienceAndAnnounce(player, JobEnum.BREEDER, 1)
 		}
 	}
@@ -25,9 +25,9 @@ class Breeder: Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	fun onEntityTame(event: EntityTameEvent) {
 		val player = event.owner as Player
-		if (!Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
+		if (event.isCancelled || !Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
-		Coin.dropCoin(event.entity.location, 4.0)
+		jobPayPlayer(player, 0.3, JobEnum.BREEDER)
 		Main.jobController.addExperienceAndAnnounce(player, JobEnum.BREEDER, 1)
 	}
 }
