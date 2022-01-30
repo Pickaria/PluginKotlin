@@ -8,11 +8,17 @@ import fr.pickaria.model.job
 import fr.pickaria.utils.DoubleCache
 import org.bukkit.Bukkit
 import org.bukkit.Bukkit.getServer
+import org.bukkit.Sound
+import org.bukkit.boss.BarColor
+import org.bukkit.boss.BarStyle
+import org.bukkit.boss.BossBar
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.scheduler.BukkitRunnable
+import org.bukkit.scheduler.BukkitTask
 import org.ktorm.dsl.*
 import org.ktorm.entity.*
 import java.time.Instant
@@ -21,20 +27,21 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.floor
+import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.pow
-import kotlin.math.sqrt
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
 
-class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
+class JobController(private val plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	companion object {
 		const val MAX_JOBS = 1
 		const val COOLDOWN = 1L
 	}
 
 	override val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<JobEnum, Job>> = ConcurrentHashMap()
+	private val bossBars: ConcurrentHashMap<Player, BossBar> = ConcurrentHashMap()
+	private val bossBarsTasks: ConcurrentHashMap<BossBar, BukkitTask> = ConcurrentHashMap()
 
 	init {
 		getServer().pluginManager.run {
@@ -62,6 +69,12 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	@EventHandler
 	override suspend fun onPlayerJoin(event: PlayerJoinEvent) {
 		getFromCache(event.player.uniqueId)
+	}
+
+	@EventHandler
+	override suspend fun onPlayerQuit(event: PlayerQuitEvent) {
+		super.onPlayerQuit(event)
+		bossBars.remove(event.player)
 	}
 
 	override fun getFromCache(uniqueId: UUID, key: JobEnum): Job? =
@@ -92,7 +105,7 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 
 	fun hasJob(playerUuid: UUID, jobName: JobEnum): Boolean {
 		val job = getFromCache(playerUuid, jobName)
-		return job != null && job.active
+		return job?.active == true
 	}
 
 	fun jobCount(playerUuid: UUID): Int = getFromCache(playerUuid)?.filter { it.value.active }?.size ?: 0
@@ -133,20 +146,34 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 	fun leaveJob(playerUuid: UUID, jobName: JobEnum) {
 		getFromCache(playerUuid, jobName)?.let {
 			it.active = false
-			it.level = (it.level * 0.8).toInt()
 		}
 	}
 
-	fun getExperienceFromLevel(level: Int): Int = ((level.toDouble().pow(2.0) + level) / 2).toInt()
+	private fun getExperienceFromLevel(job: JobEnum, level: Int): Int {
+		return if (level >= 0) {
+			ceil(job.startExperience * job.experiencePercentage.pow(level) + level * job.mult).toInt()
+		} else {
+			0
+		}
+	}
 
-	fun getLevelFromExperience(experience: Int): Int = floor(0.5 * (sqrt(8.0 * experience + 1.0) - 1)).toInt()
+	fun getLevelFromExperience(job: JobEnum, experience: Int): Int {
+		var level = 0
+		var levelExperience = job.startExperience.toDouble()
+		while ((levelExperience + level * job.mult) < experience && level < 100) {
+			levelExperience *= job.experiencePercentage
+			level++
+		}
+		return level
+	}
 
-	fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
+	private fun addExperience(playerUuid: UUID, jobName: JobEnum, exp: Int): JobErrorEnum {
 		return getFromCache(playerUuid, jobName)?.let {
-			val previousLevel = getLevelFromExperience(it.level)
+			val previousLevel = getLevelFromExperience(jobName, it.level)
 			it.level += exp
+			val newLevel = getLevelFromExperience(jobName, it.level)
 
-			if (getLevelFromExperience(it.level) > previousLevel) {
+			if (newLevel > previousLevel) {
 				JobErrorEnum.NEW_LEVEL
 			} else {
 				JobErrorEnum.NOTHING
@@ -156,9 +183,36 @@ class JobController(plugin: Main) : Listener, DoubleCache<JobEnum, Job> {
 
 	fun addExperienceAndAnnounce(player: Player, jobName: JobEnum, exp: Int): JobErrorEnum {
 		return addExperience(player.uniqueId, jobName, exp).also {
+			val job = getFromCache(player.uniqueId, jobName)!!
+			val experience = job.level
+			val level = getLevelFromExperience(jobName, experience)
+			val currentLevelExperience = getExperienceFromLevel(jobName, level - 1)
+			val nextLevelExperience = getExperienceFromLevel(jobName, level)
+			val levelDiff = abs(nextLevelExperience - currentLevelExperience)
+			val diff = abs(experience - currentLevelExperience)
+
+			val bossBar: BossBar = bossBars[player] ?: run {
+				val bossBar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SOLID)
+				bossBar.addPlayer(player)
+				bossBars[player] = bossBar
+				bossBar
+			}
+
+			bossBar.setTitle("${jobName.label} | Niveau $level ($experience / $nextLevelExperience)")
+			bossBar.isVisible = true
+			bossBar.progress = (diff / levelDiff.toDouble()).coerceAtLeast(0.0).coerceAtMost(1.0)
+
+			bossBarsTasks[bossBar]?.cancel()
+
+			bossBarsTasks[bossBar] = object : BukkitRunnable() {
+				override fun run() {
+					bossBar.isVisible = false
+				}
+			}.runTaskLater(plugin, 80)
+
 			if (it == JobErrorEnum.NEW_LEVEL) {
-				val job = getFromCache(player.uniqueId, jobName)!!
-				player.sendMessage("§7Vous montez niveau §6${getLevelFromExperience(job.level)}§7 dans le métier §6${jobName.label}§7.")
+				player.playSound(player.location, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
+				player.sendMessage("§7Vous montez niveau §6$level§7 dans le métier §6${jobName.label}§7.")
 			}
 		}
 	}

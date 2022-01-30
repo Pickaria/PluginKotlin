@@ -1,13 +1,14 @@
 package fr.pickaria.jobs.jobs
 
 import fr.pickaria.Main
-import fr.pickaria.coins.Coin
 import fr.pickaria.jobs.JobEnum
+import fr.pickaria.jobs.jobPayPlayer
 import org.bukkit.Bukkit.getServer
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.inventory.BrewEvent
@@ -45,17 +46,18 @@ class Alchemist: Listener {
 		brewingStands.remove(event.block.location)
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.MONITOR)
 	fun onBrew(event: BrewEvent) {
 		val location = event.block.location
 		val uniqueId = brewingStands[location]
-		if (uniqueId == null || !Main.jobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
+		if (event.isCancelled || uniqueId == null || !Main.jobController.hasJob(uniqueId, JobEnum.ALCHEMIST)) return
 
 		event.results.forEach {
 			if (isPotion(it)) {
-				Coin.dropCoin(location, 1.0, 2.0)
-				val player = getServer().getOfflinePlayer(uniqueId) as Player
-				Main.jobController.addExperienceAndAnnounce(player, JobEnum.ALCHEMIST, 1)
+				getServer().getPlayer(uniqueId)?.let { player ->
+					jobPayPlayer(player, 0.15, JobEnum.ALCHEMIST)
+					Main.jobController.addExperienceAndAnnounce(player, JobEnum.ALCHEMIST, 1)
+				}
 			}
 		}
 	}

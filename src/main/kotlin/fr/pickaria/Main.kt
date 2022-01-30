@@ -3,7 +3,6 @@ package fr.pickaria
 import com.github.shynixn.mccoroutine.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.registerSuspendingEvents
 import com.github.shynixn.mccoroutine.setSuspendingExecutor
-import fr.pickaria.coins.Coin
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
@@ -11,6 +10,8 @@ import fr.pickaria.economy.PickariaEconomy
 import fr.pickaria.enchant.Anvil
 import fr.pickaria.jobs.JobCommand
 import fr.pickaria.jobs.JobController
+import fr.pickaria.menus.MenuCommand
+import fr.pickaria.menus.MenuController
 import fr.pickaria.spawners.CollectSpawner
 import fr.pickaria.tablist.ChatFormat
 import fr.pickaria.tablist.Motd
@@ -36,6 +37,7 @@ class Main: SuspendingJavaPlugin() {
 		var chat: Chat? = null
 		lateinit var economy: Economy
 		lateinit var jobController: JobController
+		lateinit var menuController: MenuController
 	}
 
 	override fun onEnable() {
@@ -59,6 +61,9 @@ class Main: SuspendingJavaPlugin() {
 			server.logger.severe("An error occurred while trying to connect to the database, some features may not function properly")
 		}
 
+		menuController = MenuController(this)
+		//getCommand("menu")?.setExecutor(MenuCommand()) ?: server.logger.warning("Command menu could not be registered")
+
 		// Economy
 		if (setupEconomy()) {
 			// Economy commands
@@ -71,7 +76,6 @@ class Main: SuspendingJavaPlugin() {
 			val jobCommand = JobCommand()
 			getCommand("job")?.setExecutor(jobCommand) ?: server.logger.warning("Command job could not be registered")
 			getCommand("jobs")?.setExecutor(jobCommand) ?: server.logger.warning("Command job could not be registered")
-			server.pluginManager.registerEvents(Coin(), this)
 
 			// Votes
 			server.pluginManager.registerEvents(VoteListener(), this)
@@ -92,6 +96,9 @@ class Main: SuspendingJavaPlugin() {
 			// Spawners
 			it.registerEvents(Anvil(), this)
 			it.registerEvents(CollectSpawner(), this)
+
+			// Menus
+			it.registerEvents(menuController, this)
 		}
 
 		server.logger.info("Pickaria plugin enabled")
@@ -142,6 +149,9 @@ class Main: SuspendingJavaPlugin() {
 
 val Dispatchers.DB: ExecutorCoroutineDispatcher
 	get() = newSingleThreadContext("Database")
+
+val Dispatchers.Menus: ExecutorCoroutineDispatcher
+	get() = newSingleThreadContext("Menus")
 
 fun <T>DBAsync(block: suspend () -> T){
 	CoroutineScope(Dispatchers.DB).launch {

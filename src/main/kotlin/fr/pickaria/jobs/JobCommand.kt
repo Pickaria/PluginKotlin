@@ -1,6 +1,7 @@
 package fr.pickaria.jobs
 
 import fr.pickaria.Main
+import fr.pickaria.menus.MenuEnum
 import fr.pickaria.model.JobModel
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -13,7 +14,7 @@ import org.ktorm.dsl.*
 
 class JobCommand : CommandExecutor, TabCompleter {
 	companion object {
-		val SUB_COMMANDS = listOf("join", "leave", "top")
+		val SUB_COMMANDS = listOf("join", "leave", "top", "menu")
 	}
 
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -26,6 +27,11 @@ class JobCommand : CommandExecutor, TabCompleter {
 					"§7Vous exercez le(s) métier(s) : ${jobs?.joinToString(", ")}."
 				}
 				sender.sendMessage(message)
+				return true
+			}
+
+			if (args[0] == "menu") {
+				Main.menuController.openMenu(sender, MenuEnum.JOBS, null)
 				return true
 			}
 
