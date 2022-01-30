@@ -2,7 +2,6 @@ package fr.pickaria.chestLock
 
 import org.bukkit.Material
 import org.bukkit.Tag
-import org.bukkit.block.Chest
 import org.bukkit.block.Sign
 import org.bukkit.block.data.Directional
 import org.bukkit.block.data.type.WallSign
@@ -28,7 +27,8 @@ class ChestLock : Listener {
             Material.BARREL,
             Material.CHEST,
             Material.ENDER_CHEST, // no interest except troll ?
-            Material.SHULKER_BOX,
+            Material.TRAPPED_CHEST
+/*            Material.SHULKER_BOX,
             Material.BLACK_SHULKER_BOX,
             Material.BLUE_SHULKER_BOX,
             Material.BROWN_SHULKER_BOX,
@@ -45,7 +45,7 @@ class ChestLock : Listener {
             Material.RED_SHULKER_BOX,
             Material.WHITE_SHULKER_BOX,
             Material.YELLOW_SHULKER_BOX,
-            Material.TRAPPED_CHEST
+ */
         )
         val signMapped = mapOf(
             Material.ACACIA_SIGN    to Material.ACACIA_WALL_SIGN,
@@ -85,8 +85,8 @@ class ChestLock : Listener {
 
         event.setUseInteractedBlock(Event.Result.DENY) // just place the sign, no other interaction
         // the locking sign's area
-        val chest = (event.clickedBlock as Chest)
-        val chestFacing = (chest.blockData as Directional).facing
+        val chest = event.clickedBlock
+        val chestFacing = (chest?.blockData as Directional).facing
         val relativeTarget = event.clickedBlock?.getRelative(chestFacing) // Frontal block
         if (relativeTarget?.type?.isAir != true) return // need an empty space
 
