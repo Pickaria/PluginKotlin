@@ -149,7 +149,7 @@ class JobController(private val plugin: Main) : Listener, DoubleCache<JobEnum, J
 		}
 	}
 
-	private fun getExperienceFromLevel(job: JobEnum, level: Int): Int {
+	fun getExperienceFromLevel(job: JobEnum, level: Int): Int {
 		return if (level >= 0) {
 			ceil(job.startExperience * job.experiencePercentage.pow(level) + level * job.mult).toInt()
 		} else {
