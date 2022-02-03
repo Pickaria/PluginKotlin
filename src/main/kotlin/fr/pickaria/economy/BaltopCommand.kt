@@ -11,13 +11,16 @@ import org.bukkit.Bukkit.getServer
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.ktorm.entity.forEach
+import java.time.Instant
 
 class BaltopCommand : SuspendingCommandExecutor {
 	companion object {
 		const val PAGE_SIZE = 8
+		const val BALTOP_SORT_DELAY = 60L // Delay between baltop sorts in seconds
 	}
 
-	private lateinit var top: List<Pair<String?, Double>>
+	private var top: List<Pair<String?, Double>> = mutableListOf()
+	private var lastUpdate: Instant = Instant.MIN // Stores the last time the baltop was sorted
 
 	override suspend fun onCommand(
 		sender: CommandSender,
@@ -42,20 +45,27 @@ class BaltopCommand : SuspendingCommandExecutor {
 		}
 
 		CoroutineScope(Dispatchers.Default).launch {
+			// Special treatment for PickariaEconomy
 			if (Main.economy is PickariaEconomy) {
+				sender.sendMessage("Récupération des comptes joueurs, veuillez patienter...")
 				with(Main.economy as PickariaEconomy) {
 					if (Main.database.economy.totalRecords > this.cache.size) {
-						sender.sendMessage("Mise en cache du baltop, veuillez patienter...")
-
 						Main.database.economy.forEach {
 							this.cache[it.playerUniqueId] = it
 						}
-
-						top = players.filter { Main.economy.hasAccount(it) }
-							.map { Pair(it.name, Main.economy.getBalance(it)) }
-							.sortedByDescending { it.second }
 					}
 				}
+			}
+
+			val now = Instant.now()
+			if (now.isAfter(lastUpdate.plusSeconds(BALTOP_SORT_DELAY))) {
+				sender.sendMessage("Mise en cache du baltop, veuillez patienter...")
+
+				top = players.filter { Main.economy.hasAccount(it) }
+					.map { Pair(it.name, Main.economy.getBalance(it)) }
+					.sortedByDescending { it.second }
+
+				lastUpdate = now
 			}
 
 			val maxPage = top.size / PAGE_SIZE
