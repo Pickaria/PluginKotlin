@@ -14,7 +14,7 @@ import org.ktorm.dsl.*
 
 class JobCommand : CommandExecutor, TabCompleter {
 	companion object {
-		val SUB_COMMANDS = listOf("join", "leave", "top", "menu", "stats", "info")
+		val SUB_COMMANDS = listOf("join", "leave", "top", "menu", "stats")
 	}
 
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -149,7 +149,7 @@ class JobCommand : CommandExecutor, TabCompleter {
 				1 -> SUB_COMMANDS.filter { it.startsWith(args[0]) }.toMutableList()
 				2 -> when (args[0]) {
 					// Return list of jobs
-					"top", "join", "stats", "info" -> JobEnum.values().map { it.name.lowercase() }.filter { it.startsWith(args[1]) }
+					"top", "join", "stats" -> JobEnum.values().map { it.name.lowercase() }.filter { it.startsWith(args[1]) }
 						.toMutableList()
 					// Get list of active jobs
 					"leave" -> Main.jobController.getFromCache(sender.uniqueId)
