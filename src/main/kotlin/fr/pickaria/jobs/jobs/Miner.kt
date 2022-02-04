@@ -50,8 +50,7 @@ class Miner: Listener {
 		val itemInHand = player.inventory.itemInMainHand
 		if (Enchantment.SILK_TOUCH !in itemInHand.enchantments && event.block.getDrops(itemInHand).isNotEmpty()) {
 			materials[event.block.type]?.let {
-				jobPayPlayer(player, it.first, JobEnum.MINER)
-				Main.jobController.addExperienceAndAnnounce(player, JobEnum.MINER, it.second)
+				jobPayPlayer(player, it.first, JobEnum.MINER, it.second)
 			}
 		}
 	}
