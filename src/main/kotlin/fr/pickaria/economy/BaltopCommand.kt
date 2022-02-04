@@ -19,8 +19,8 @@ class BaltopCommand : SuspendingCommandExecutor {
 		const val BALTOP_SORT_DELAY = 60L // Delay between baltop sorts in seconds
 	}
 
-	private var top: List<Pair<String?, Double>> = mutableListOf()
-	private var lastUpdate: Instant = Instant.MIN // Stores the last time the baltop was sorted
+	private var top: List<Pair<String?, Double>> = listOf()
+	private var lastUpdate = Instant.MIN // Stores the last time the baltop was sorted
 
 	override suspend fun onCommand(
 		sender: CommandSender,
