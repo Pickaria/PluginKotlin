@@ -9,7 +9,6 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryType
-import org.bukkit.inventory.MerchantInventory
 
 class Trader: Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -21,8 +20,7 @@ class Trader: Listener {
 			event.inventory.type == InventoryType.MERCHANT &&
 			event.slotType == InventoryType.SlotType.RESULT) {
 
-			jobPayPlayer(player, 0.2, JobEnum.TRADER)
-			Main.jobController.addExperienceAndAnnounce(player, JobEnum.TRADER, 1)
+			jobPayPlayer(player, 0.2, JobEnum.TRADER, 1)
 		}
 	}
 }

@@ -6,7 +6,6 @@ import fr.pickaria.jobs.jobPayPlayer
 import org.bukkit.Bukkit.getServer
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -55,8 +54,7 @@ class Alchemist: Listener {
 		event.results.forEach {
 			if (isPotion(it)) {
 				getServer().getPlayer(uniqueId)?.let { player ->
-					jobPayPlayer(player, 0.15, JobEnum.ALCHEMIST)
-					Main.jobController.addExperienceAndAnnounce(player, JobEnum.ALCHEMIST, 1)
+					jobPayPlayer(player, 0.15, JobEnum.ALCHEMIST, 1)
 				}
 			}
 		}

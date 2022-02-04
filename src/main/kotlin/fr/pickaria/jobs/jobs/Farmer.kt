@@ -39,12 +39,10 @@ class Farmer : Listener {
 		crops[event.block.type]?.let {
 			(event.block.blockData as? Ageable)?.let { blockData ->
 				if (blockData.age == blockData.maximumAge) {
-					jobPayPlayer(event.player, it, JobEnum.FARMER)
-					Main.jobController.addExperienceAndAnnounce(event.player, JobEnum.FARMER, 1)
+					jobPayPlayer(event.player, it, JobEnum.FARMER, 1)
 				}
 			} ?: run {
-				jobPayPlayer(event.player, it, JobEnum.FARMER)
-				Main.jobController.addExperienceAndAnnounce(event.player, JobEnum.FARMER, 1)
+				jobPayPlayer(event.player, it, JobEnum.FARMER, 1)
 			}
 		}
 	}
