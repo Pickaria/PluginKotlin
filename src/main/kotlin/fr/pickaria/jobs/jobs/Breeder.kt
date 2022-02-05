@@ -17,8 +17,7 @@ class Breeder: Listener {
 			val player = event.breeder as Player
 			if (event.isCancelled || !Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
-			jobPayPlayer(player, 0.2, JobEnum.BREEDER)
-			Main.jobController.addExperienceAndAnnounce(player, JobEnum.BREEDER, 1)
+			jobPayPlayer(player, 0.2, JobEnum.BREEDER, 1)
 		}
 	}
 
@@ -27,7 +26,6 @@ class Breeder: Listener {
 		val player = event.owner as Player
 		if (event.isCancelled || !Main.jobController.hasJob(player.uniqueId, JobEnum.BREEDER)) return
 
-		jobPayPlayer(player, 0.3, JobEnum.BREEDER)
-		Main.jobController.addExperienceAndAnnounce(player, JobEnum.BREEDER, 1)
+		jobPayPlayer(player, 0.3, JobEnum.BREEDER, 1)
 	}
 }

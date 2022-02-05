@@ -20,7 +20,6 @@ class Wizard: Listener {
 		val uniqueId = event.enchanter.uniqueId
 		if (event.isCancelled || !Main.jobController.hasJob(uniqueId, JobEnum.WIZARD)) return
 
-		jobPayPlayer(event.enchanter, levels[event.whichButton()] ?: 0.15, JobEnum.WIZARD)
-		Main.jobController.addExperienceAndAnnounce(event.enchanter, JobEnum.WIZARD, 1)
+		jobPayPlayer(event.enchanter, levels[event.whichButton()] ?: 0.15, JobEnum.WIZARD, 1)
 	}
 }

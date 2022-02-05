@@ -60,8 +60,7 @@ class Hunter : Listener {
 		event.entity.killer?.let { player ->
 			if (Main.jobController.hasJob(player.uniqueId, JobEnum.HUNTER)) {
 				monsters[event.entityType]?.let {
-					jobPayPlayer(player, it.first, JobEnum.HUNTER)
-					Main.jobController.addExperienceAndAnnounce(player, JobEnum.HUNTER, it.second)
+					jobPayPlayer(player, it.first, JobEnum.HUNTER, it.second)
 				}
 			}
 		}
