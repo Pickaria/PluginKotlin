@@ -10,8 +10,8 @@ import fr.pickaria.economy.PickariaEconomy
 import fr.pickaria.enchant.Anvil
 import fr.pickaria.jobs.JobCommand
 import fr.pickaria.jobs.JobController
-import fr.pickaria.menus.MenuCommand
 import fr.pickaria.menus.MenuController
+import fr.pickaria.shop.SocketListener
 import fr.pickaria.spawners.CollectSpawner
 import fr.pickaria.tablist.ChatFormat
 import fr.pickaria.tablist.Motd
@@ -38,11 +38,10 @@ class Main: SuspendingJavaPlugin() {
 		lateinit var economy: Economy
 		lateinit var jobController: JobController
 		lateinit var menuController: MenuController
+		lateinit var socketListener: SocketListener
 	}
 
-	override fun onEnable() {
-		super.onEnable()
-
+	override suspend fun onEnableAsync() {
 		saveDefaultConfig()
 
 		logger.info("Main on thread ${Thread.currentThread().name}")
@@ -101,6 +100,13 @@ class Main: SuspendingJavaPlugin() {
 			it.registerEvents(menuController, this)
 		}
 
+		// Start shop socket listener
+		socketListener = SocketListener()
+		socketListener.createSocket()
+		CoroutineScope(Dispatchers.Socket).launch {
+			socketListener.listen()
+		}
+
 		server.logger.info("Pickaria plugin enabled")
 	}
 
@@ -134,13 +140,14 @@ class Main: SuspendingJavaPlugin() {
 
 	}
 
-	override fun onDisable() {
-		super.onDisable()
+	override suspend fun onDisableAsync() {
+		socketListener.closeSocket()
 
 		if (economy is PickariaEconomy) {
 			(economy as PickariaEconomy).flushAllEntities(true)
-			jobController.flushAllEntities(true)
 		}
+
+		jobController.flushAllEntities(true)
 
 		logger.log(Level.INFO, "Pickaria plugin disabled")
 		Dispatchers.DB.close()
@@ -152,6 +159,9 @@ val Dispatchers.DB: ExecutorCoroutineDispatcher
 
 val Dispatchers.Menus: ExecutorCoroutineDispatcher
 	get() = newSingleThreadContext("Menus")
+
+val Dispatchers.Socket: ExecutorCoroutineDispatcher
+	get() = newSingleThreadContext("Socket")
 
 fun <T>DBAsync(block: suspend () -> T){
 	CoroutineScope(Dispatchers.DB).launch {

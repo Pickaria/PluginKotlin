@@ -30,6 +30,8 @@ dependencies {
     implementation("org.ktorm:ktorm-core:3.4.1")
     implementation("org.ktorm:ktorm-support-postgresql:3.4.1")
 
+    implementation("io.ktor:ktor-network:2.0.0-beta-1")
+
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:1.5.0")
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:1.5.0")
 
