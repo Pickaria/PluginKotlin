@@ -1,4 +1,4 @@
-package fr.pickaria.homes
+package fr.pickaria.teleport
 
 import fr.pickaria.Main
 import org.bukkit.command.Command

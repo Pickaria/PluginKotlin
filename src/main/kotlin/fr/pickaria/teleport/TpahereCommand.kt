@@ -1,4 +1,4 @@
-package fr.pickaria.tpa
+package fr.pickaria.teleport
 
 import org.bukkit.Bukkit.getPlayer
 import org.bukkit.Bukkit.getServer

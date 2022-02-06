@@ -1,4 +1,4 @@
-package fr.pickaria.tpa
+package fr.pickaria.teleport
 
 import fr.pickaria.Main
 import org.bukkit.Location

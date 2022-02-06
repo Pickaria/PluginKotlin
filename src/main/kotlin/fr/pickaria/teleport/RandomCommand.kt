@@ -1,7 +1,6 @@
-package fr.pickaria.randomtp
+package fr.pickaria.teleport
 
 import fr.pickaria.Main
-import fr.pickaria.tpa.TeleportController
 import net.milkbowl.vault.economy.EconomyResponse
 import org.bukkit.Location
 import org.bukkit.block.Biome
@@ -50,12 +49,7 @@ class RandomCommand : CommandExecutor {
 		if (sender is Player) {
 			val containsTag = sender.scoreboardTags.contains(TAG)
 
-			val timeRemaining = lastTeleport[sender]?.until(
-				LocalDateTime.now(),
-				ChronoUnit.MINUTES
-			) ?: 0
 
-			if (timeRemaining >= BETWEEN_TELEPORT_COOLDOWN) {
 				if (containsTag && Main.economy.has(sender, PRICE)) {
 					val withdrawResponse = Main.economy.withdrawPlayer(sender, PRICE)
 
@@ -70,10 +64,8 @@ class RandomCommand : CommandExecutor {
 				} else {
 					sender.sendMessage("§cVous n'avez pas assez d'argent.")
 				}
-			} else {
-				sender.sendMessage("§cVous devez patienter encore $timeRemaining minutes avant de vous téléporter.")
 			}
-		}
+
 
 		return true
 	}

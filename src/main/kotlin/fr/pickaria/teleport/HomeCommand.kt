@@ -1,4 +1,4 @@
-package fr.pickaria.homes
+package fr.pickaria.teleport
 
 import fr.pickaria.Main
 import org.bukkit.command.Command
@@ -6,7 +6,6 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
-import fr.pickaria.tpa.TeleportController
 
 
 class HomeCommand : CommandExecutor, TabCompleter {

@@ -1,9 +1,9 @@
-package fr.pickaria.tpa
+package fr.pickaria.teleport
 
 import org.bukkit.Bukkit.getPlayer
 import org.bukkit.Bukkit.getServer
 
-import fr.pickaria.tpa.TeleportController.Companion.map
+import fr.pickaria.teleport.TeleportController.Companion.map
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender

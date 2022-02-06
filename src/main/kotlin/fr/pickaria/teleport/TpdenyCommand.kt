@@ -1,4 +1,4 @@
-package fr.pickaria.tpa
+package fr.pickaria.teleport
 
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor

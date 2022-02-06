@@ -1,4 +1,4 @@
-package fr.pickaria.tpa
+package fr.pickaria.teleport
 
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -13,8 +13,12 @@ class TpacceptCommand : CommandExecutor {
 			TeleportController.map[sender]?.let {
 				if (it.second) {
 					TeleportController.cooldownTeleport(sender, it.first.location)
+					sender.sendMessage("§6Demande de téléportation acceptée.")
+					it.first.sendMessage("§6Demande de téléportation acceptée.")
 				} else {
 					TeleportController.cooldownTeleport(it.first, sender.location)
+					sender.sendMessage("§6Demande de téléportation acceptée.")
+					it.first.sendMessage("§6Demande de téléportation acceptée.")
 				}
 
 				TeleportController.map.remove(sender)
