@@ -1,110 +1,114 @@
 package fr.pickaria.homes
 
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import fr.pickaria.Main
 import fr.pickaria.model.Home
 import fr.pickaria.model.home
-import it.unimi.dsi.fastutil.Hash
+import fr.pickaria.utils.DoubleCache
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
 import org.ktorm.dsl.and
 import org.ktorm.dsl.eq
 import org.ktorm.entity.*
 import java.sql.SQLException
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.collections.HashMap
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.ceil
 
-class HomeController {
-	companion object {
-		private var cache: Cache<UUID, HashMap<String, Location>> = Caffeine.newBuilder()
-			.expireAfterWrite(10, TimeUnit.MINUTES)
-			.maximumSize(10000)
-			.build()
+class HomeController : Listener, DoubleCache<String, Home> {
+	override val cache: ConcurrentHashMap<UUID, ConcurrentHashMap<String, Home>> = ConcurrentHashMap()
 
-		fun getHomeNames(uniqueId: UUID): List<String> {
-			var map = cache.getIfPresent(uniqueId)
+	override suspend fun onPlayerJoin(event: PlayerJoinEvent) {
+		TODO("Not yet implemented")
+	}
 
-			if (map == null) {
-				map = HashMap()
+	override fun getFromCache(uniqueId: UUID): ConcurrentHashMap<String, Home>? {
+		return if (cache.containsKey(uniqueId)) {
+			cache[uniqueId]
+		} else {
+			val homes = ConcurrentHashMap<String, Home>()
 
-				Main.database.home
-					.filter { it.playerUniqueId eq uniqueId }
-					.forEach {
-						val world = try {
-							Bukkit.getWorld(it.world!!)
-						} catch (_: NullPointerException) {
-							null
-						}
-
-						val location = Location(world, it.x.toDouble(), it.y.toDouble(), it.z.toDouble())
-						map[it.name] = location
-					}
-
-				cache.put(uniqueId, map)
-			}
-
-			return map.map { it.key }
-		}
-
-		fun getHomeByName(uniqueId: UUID, name: String): Location? {
-			val map = cache.getIfPresent(uniqueId)
-
-			if (map == null || map[name] == null) {
-				val home = Main.database.home
-					.find { (it.name eq name) and (it.playerUniqueId eq uniqueId) }!!
-
-				val world = try {
-					Bukkit.getWorld(home.world!!)
-				} catch (_: NullPointerException) {
-					null
+			Main.database.home
+				.filter { (it.playerUniqueId eq uniqueId) }
+				.forEach {
+					homes[it.name] = it
 				}
 
-				return Location(world, home.x.toDouble(), home.y.toDouble(), home.z.toDouble())
-			}
-
-			return map[name]
+			cache[uniqueId] = homes
+			cache[uniqueId]
 		}
+	}
 
-		fun removeHomeFromCache(uniqueId: UUID, name: String): Boolean {
-			val map = cache.getIfPresent(uniqueId)
-			if (map != null) {
-				map.remove(name)
-				cache.put(uniqueId, map)
+	override fun getFromCache(uniqueId: UUID, key: String): Home? =
+		cache[uniqueId]?.get(key)
+			?: Main.database.home.find { (it.playerUniqueId eq uniqueId) and (it.name eq key) }?.let {
+				cache[uniqueId]?.set(key, it) ?: run {
+					cache[uniqueId] = ConcurrentHashMap()
+					cache[uniqueId]?.put(key, it)
+				}
+				cache[uniqueId]?.get(key)
 			}
 
-			return try {
-				val home = Main.database.home
-					.find { (it.name eq name) and (it.playerUniqueId eq uniqueId) }!!
+	fun getHomeNames(uniqueId: UUID): List<String> {
+		return getFromCache(uniqueId)?.map {
+			it.key
+		} ?: listOf()
+	}
 
-				home.delete() > 0
+	fun getHomeByName(uniqueId: UUID, name: String): Location? {
+		val home = getFromCache(uniqueId, name)
+
+		return if (home != null) {
+			val world = try {
+				Bukkit.getWorld(home.world!!)
 			} catch (_: NullPointerException) {
-				false
+				null
 			}
+
+			return Location(world, home.x.toDouble(), home.y.toDouble(), home.z.toDouble())
+		} else {
+			null
+		}
+	}
+
+	fun removeHome(uniqueId: UUID, name: String): Boolean {
+		return try {
+			val playerCache = cache[uniqueId]!!
+			val home = playerCache[name]!!
+			if (home.delete() > 0) {
+				playerCache.remove(name)
+				return true
+			}
+			false
+		} catch (_: NullPointerException) {
+			false
+		}
+	}
+
+	fun addHome(uniqueId: UUID, homeName: String, location: Location): Boolean {
+		val home = Home {
+			playerUniqueId = uniqueId
+			name = homeName
+			world = location.world?.uid
+			x = location.x.toInt()
+			y = ceil(location.y).toInt()
+			z = location.z.toInt()
 		}
 
-		fun addHomeToCache(uniqueId: UUID, homeName: String, location: Location): Boolean {
-			val map = cache.getIfPresent(uniqueId) ?: HashMap()
-			map[homeName] = location
-			cache.put(uniqueId, map)
+		cache[uniqueId]?.let {
+			it[homeName] = home
+		} ?: run {
+			val homes = ConcurrentHashMap<String, Home>()
+			homes[homeName] = home
+			cache[uniqueId] = homes
+		}
 
-			val home = Home {
-				playerUniqueId = uniqueId
-				name = homeName
-				world = location.world?.uid
-				x = location.x.toInt()
-				y = ceil(location.y).toInt()
-				z = location.z.toInt()
-			}
-
-			return try {
-				Main.database.home.add(home) > 0
-			} catch (_: SQLException) {
-				Main.database.home.update(home)
-				true
-			}
+		return try {
+			Main.database.home.add(home) > 0
+		} catch (_: SQLException) {
+			Main.database.home.update(home)
+			true
 		}
 	}
 }

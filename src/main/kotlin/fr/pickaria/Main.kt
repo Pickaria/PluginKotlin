@@ -24,6 +24,7 @@ import net.milkbowl.vault.chat.Chat
 import kotlinx.coroutines.*
 import fr.pickaria.homes.DelHomeCommand
 import fr.pickaria.homes.HomeCommand
+import fr.pickaria.homes.HomeController
 import fr.pickaria.homes.SetHomeCommand
 import fr.pickaria.tpa.TpaCommand
 import fr.pickaria.tpa.TpacceptCommand
@@ -45,6 +46,7 @@ class Main: SuspendingJavaPlugin() {
 		lateinit var economy: Economy
 		lateinit var jobController: JobController
 		lateinit var menuController: MenuController
+		lateinit var homeController: HomeController
 		lateinit var plugin: Main
 	}
 
@@ -73,6 +75,8 @@ class Main: SuspendingJavaPlugin() {
 
 		menuController = MenuController(this)
 		//getCommand("menu")?.setExecutor(MenuCommand()) ?: server.logger.warning("Command menu could not be registered")
+
+		homeController = HomeController()
 
 		// Economy
 		if (setupEconomy()) {

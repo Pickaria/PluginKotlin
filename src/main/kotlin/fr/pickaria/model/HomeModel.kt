@@ -22,7 +22,7 @@ interface Home : Entity<Home> {
 
 object HomeModel : Table<Home>("home") {
 	val playerUniqueId = uuid("player_uuid").primaryKey().bindTo { it.playerUniqueId }
-	val name = varchar("name").bindTo { it.name }
+	val name = varchar("name").primaryKey().bindTo { it.name }
 	val world = uuid("world").bindTo { it.world }
 	val x = int("location_x").bindTo { it.x }
 	val y = int("location_y").bindTo { it.y }

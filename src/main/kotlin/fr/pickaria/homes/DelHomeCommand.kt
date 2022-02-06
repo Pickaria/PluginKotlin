@@ -1,5 +1,6 @@
 package fr.pickaria.homes
 
+import fr.pickaria.Main
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -16,7 +17,7 @@ class DelHomeCommand : CommandExecutor, TabCompleter {
 				SetHomeCommand.NAME
 			}
 
-			if (HomeController.removeHomeFromCache(sender.uniqueId, homeName)) {
+			if (Main.homeController.removeHome(sender.uniqueId, homeName)) {
 				sender.sendMessage("§7Ce point de téléportation a été supprimé.")
 			} else {
 				sender.sendMessage("§cCe point de téléportation n'existe pas.")
@@ -31,6 +32,11 @@ class DelHomeCommand : CommandExecutor, TabCompleter {
 		alias: String,
 		args: Array<out String>
 	): MutableList<String> {
-		return HomeController.getHomeNames((sender as Player).uniqueId).toMutableList()
+		return if (args.size == 1) {
+			Main.homeController.getHomeNames((sender as Player).uniqueId).filter { it.startsWith(args[0]) }
+				.toMutableList()
+		} else {
+			mutableListOf()
+		}
 	}
 }

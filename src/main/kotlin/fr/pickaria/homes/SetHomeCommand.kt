@@ -1,5 +1,6 @@
 package fr.pickaria.homes
 
+import fr.pickaria.Main
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -26,7 +27,7 @@ class SetHomeCommand : CommandExecutor, TabCompleter {
 				NAME
 			}
 
-			if (HomeController.addHomeToCache(sender.uniqueId, homeName, location)) {
+			if (Main.homeController.addHome(sender.uniqueId, homeName, location)) {
 				sender.sendMessage("§7Point de téléportation créé.")
 			} else {
 				sender.sendMessage("§cLe point d'apparition n'a pas pu être créé.")

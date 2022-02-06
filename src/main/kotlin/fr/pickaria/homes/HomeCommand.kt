@@ -1,5 +1,6 @@
 package fr.pickaria.homes
 
+import fr.pickaria.Main
 import fr.pickaria.cooldownTeleport
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -21,7 +22,7 @@ class HomeCommand : CommandExecutor, TabCompleter {
 				NAME
 			}
 
-			val location = HomeController.getHomeByName(sender.uniqueId, homeName)
+			val location = Main.homeController.getHomeByName(sender.uniqueId, homeName)
 			if (location != null) {
 				if (location.block.type.isOccluding) {
 					sender.sendMessage("§cCe point de teleportation n'est pas sécurisé, vous ne pouvez pas y être téléporté.")
@@ -42,6 +43,11 @@ class HomeCommand : CommandExecutor, TabCompleter {
 		alias: String,
 		args: Array<out String>
 	): MutableList<String> {
-		return HomeController.getHomeNames((sender as Player).uniqueId).toMutableList()
+		return if (args.size == 1) {
+			Main.homeController.getHomeNames((sender as Player).uniqueId).filter { it.startsWith(args[0]) }
+				.toMutableList()
+		} else {
+			mutableListOf()
+		}
 	}
 }
