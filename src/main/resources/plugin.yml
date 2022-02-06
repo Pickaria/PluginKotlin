@@ -2,7 +2,7 @@ name: PickariaKotlin
 version: 1.1
 api-version: 1.18
 main: fr.pickaria.Main
-author: Macaron, Quozul
+author: Macaron, Quozul, Alina
 depend: [Vault, Votifier, LangUtils, ProtocolLib]
 loadbefore: [Towny, Essentials]
 
@@ -23,6 +23,9 @@ commands:
     description: Rejoindre ou quitter un métier
     usage: /jobs <join|leave|top|menu> [métier]
     permission: pickaria.command.job
+  tprandom:
+    description: Vous téléporte aléatoirement sur la carte
+    usage: /tprandom
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]

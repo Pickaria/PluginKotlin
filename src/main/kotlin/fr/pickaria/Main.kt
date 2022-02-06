@@ -6,6 +6,7 @@ import com.github.shynixn.mccoroutine.setSuspendingExecutor
 import fr.pickaria.economy.BaltopCommand
 import fr.pickaria.economy.MoneyCommand
 import fr.pickaria.economy.PayCommand
+import fr.pickaria.randomtp.RandomCommand
 import fr.pickaria.economy.PickariaEconomy
 import fr.pickaria.enchant.Anvil
 import fr.pickaria.jobs.JobCommand
@@ -42,6 +43,8 @@ class Main: SuspendingJavaPlugin() {
 
 	override fun onEnable() {
 		super.onEnable()
+
+		plugin = this
 
 		saveDefaultConfig()
 
@@ -83,6 +86,9 @@ class Main: SuspendingJavaPlugin() {
 
 			// Player list
 			playerList(this)
+			
+			// Teleport commands
+			getCommand("tprandom")?.setExecutor(RandomCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		}
 
 		setupChat()
