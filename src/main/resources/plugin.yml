@@ -31,3 +31,7 @@ commands:
     description: Affiche la liste des sites de votes
     usage: /vote
     permission: pickaria.command.vote
+  menu:
+    description: Ouvre le menu
+    usage: /menu
+    permission: pickaria.command.menu

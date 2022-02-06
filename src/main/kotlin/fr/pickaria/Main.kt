@@ -63,7 +63,7 @@ class Main: SuspendingJavaPlugin() {
 		}
 
 		menuController = MenuController(this)
-		//getCommand("menu")?.setExecutor(MenuCommand()) ?: server.logger.warning("Command menu could not be registered")
+		getCommand("menu")?.setExecutor(MenuCommand()) ?: server.logger.warning("Command menu could not be registered")
 
 		// Economy
 		if (setupEconomy()) {
@@ -100,7 +100,7 @@ class Main: SuspendingJavaPlugin() {
 
 			// Menus
 			it.registerEvents(menuController, this)
-			it.registerEvents(ChestLock(), this)
+			server.pluginManager.registerEvents(ChestLock(this), this)
 		}
 
 		server.logger.info("Pickaria plugin enabled")
