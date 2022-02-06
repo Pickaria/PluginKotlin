@@ -89,7 +89,6 @@ class Main: SuspendingJavaPlugin() {
 			// Jobs
 			jobController = JobController(this)
 			val jobCommand = JobCommand()
-			getCommand("job")?.setExecutor(jobCommand) ?: server.logger.warning("Command job could not be registered")
 			getCommand("jobs")?.setExecutor(jobCommand) ?: server.logger.warning("Command job could not be registered")
 
 			// Votes

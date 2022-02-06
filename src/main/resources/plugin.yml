@@ -11,25 +11,32 @@ commands:
     description: Voir son solde bancaire
     usage: /money
     permission: pickaria.command.money
+    aliases:
+      - bal
+      - balance
   pay:
     description: Payer un autre joueur
     usage: /pay <joueur> <montant>
     permission: pickaria.command.pay
-  job:
-    description: Rejoindre ou quitter un métier
-    usage: /job <join|leave|top|menu> [métier]
-    permission: pickaria.command.job
   jobs:
     description: Rejoindre ou quitter un métier
     usage: /jobs <join|leave|top|menu> [métier]
     permission: pickaria.command.job
+    aliases:
+      - job
   tprandom:
     description: Vous téléporte aléatoirement sur la carte
     usage: /tprandom
+    aliases:
+      - rtp
+      - tpr
   baltop:
     description: Affiche la liste des joueurs les plus riches
     usage: /baltop [page]
     permission: pickaria.command.baltop
+    aliases:
+      - balancetop
+      - moneytop
   vote:
     description: Affiche la liste des sites de votes
     usage: /vote

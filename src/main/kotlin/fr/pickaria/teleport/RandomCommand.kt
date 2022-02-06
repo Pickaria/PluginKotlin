@@ -9,7 +9,6 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.HashMap
 import java.util.Random
 
@@ -42,30 +41,28 @@ class RandomCommand : CommandExecutor {
 	}
 
 	private val random: Random = Random()
-	private val maxRadius = 10240
+	private val maxRadius = 5
 	private val lastTeleport = HashMap<Player, LocalDateTime>()
 
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
 		if (sender is Player) {
 			val containsTag = sender.scoreboardTags.contains(TAG)
 
+			if (containsTag && Main.economy.has(sender, PRICE)) {
+				val withdrawResponse = Main.economy.withdrawPlayer(sender, PRICE)
 
-				if (containsTag && Main.economy.has(sender, PRICE)) {
-					val withdrawResponse = Main.economy.withdrawPlayer(sender, PRICE)
-
-					if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
-						teleportPlayer(sender)
-					} else {
-						sender.sendMessage("§cUne erreur s'est produite.")
-					}
-				} else if (!containsTag) {
+				if (withdrawResponse.type == EconomyResponse.ResponseType.SUCCESS) {
 					teleportPlayer(sender)
-					sender.addScoreboardTag(TAG)
 				} else {
-					sender.sendMessage("§cVous n'avez pas assez d'argent.")
+					sender.sendMessage("§cUne erreur s'est produite.")
 				}
+			} else if (!containsTag) {
+				teleportPlayer(sender)
+				sender.addScoreboardTag(TAG)
+			} else {
+				sender.sendMessage("§cVous n'avez pas assez d'argent.")
 			}
-
+		}
 
 		return true
 	}
@@ -74,16 +71,18 @@ class RandomCommand : CommandExecutor {
 		var tries = 0
 		var x: Int
 		var z: Int
+		var location: Location
 
 		do {
-			x = random.nextInt(maxRadius)
-			z = random.nextInt(maxRadius)
-		} while (EXCLUDED_BIOMES.contains(sender.world?.getBiome(x, z)) && tries++ < 5)
+			x = random.nextInt(maxRadius * 2) - maxRadius
+			z = random.nextInt(maxRadius * 2) - maxRadius
+			location = Location(sender.world, x.toDouble(), 0.0, z.toDouble())
+			location.y = sender.world.getHighestBlockYAt(location).toDouble()
+		} while (EXCLUDED_BIOMES.contains(sender.world.getBiome(location)) && tries++ < 5 && !location.block.type.isOccluding)
+
+		location.y += 1.0
 
 		lastTeleport[sender] = LocalDateTime.now()
-
-		val location = Location(sender.world, x.toDouble(), 0.0, z.toDouble())
-		location.y = sender.world.getHighestBlockYAt(location) + 1.0
 
 		TeleportController.cooldownTeleport(sender, location)
 	}
