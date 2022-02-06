@@ -1,9 +1,13 @@
 package fr.pickaria.teleport
 
 import fr.pickaria.Main
+import net.md_5.bungee.api.ChatColor
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
+
 
 class TeleportController {
 	companion object {
@@ -34,6 +38,26 @@ class TeleportController {
 				map[sender] = recipient to direction
 				true
 			}
+		}
+
+		fun sendTpRequestMessage(sender: Player, message: String) {
+			val component = TextComponent(message)
+
+			val acceptComponent = TextComponent("[ACCEPTER]")
+			acceptComponent.setColor(ChatColor.GOLD)
+			acceptComponent.setClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpyes"))
+
+			val denyComponent = TextComponent("[REFUSER]")
+			denyComponent.setColor(ChatColor.RED)
+			denyComponent.setClickEvent(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpno"))
+
+			component.addExtra("\n > ")
+			component.addExtra(acceptComponent)
+			component.addExtra(" ou ")
+			component.addExtra(denyComponent)
+			component.addExtra(" <")
+
+			sender.spigot().sendMessage(component)
 		}
 	}
 }

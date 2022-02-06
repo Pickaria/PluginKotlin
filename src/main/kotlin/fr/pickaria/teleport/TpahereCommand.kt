@@ -1,7 +1,6 @@
 package fr.pickaria.teleport
 
 import org.bukkit.Bukkit.getPlayer
-import org.bukkit.Bukkit.getServer
 
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -18,8 +17,8 @@ class TpahereCommand : CommandExecutor {
 					sender.sendMessage("§cUne demande est déjà en cours pour ce joueur.")
 				} else
 				if (TeleportController.createTpRequest(it, sender, true)) {
-					sender.sendMessage("§7Demande de téléportation envoyée à ${it.displayName}.")
-					it.sendMessage("§7${sender.displayName} souhaite vous téléporter à lui/elle.\nTapez §6/tpyes§7 si vous accepté sa téléportation.\nTapez §6/tpdeny§7 si vous refusé.")
+					sender.sendMessage("§7Demande de téléportation envoyée à §6${it.name}§7.")
+					TeleportController.sendTpRequestMessage(it, "§6${sender.name}§7 souhaite vous téléporter à sa position.")
 				}
 			}
 		}
