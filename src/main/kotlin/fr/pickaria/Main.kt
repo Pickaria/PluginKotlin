@@ -28,6 +28,7 @@ import fr.pickaria.homes.HomeController
 import fr.pickaria.homes.SetHomeCommand
 import fr.pickaria.tpa.TpaCommand
 import fr.pickaria.tpa.TpacceptCommand
+import fr.pickaria.tpa.TpahereCommand
 import fr.pickaria.tpa.TpdenyCommand
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
@@ -108,6 +109,7 @@ class Main: SuspendingJavaPlugin() {
 
 			// TPA
 			getCommand("tpa")?.setExecutor(TpaCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("tpahere")?.setExecutor(TpahereCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 			getCommand("tpaccept")?.setExecutor(TpacceptCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 			getCommand("tpdeny")?.setExecutor(TpdenyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		}

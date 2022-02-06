@@ -1,12 +1,12 @@
 package fr.pickaria.homes
 
 import fr.pickaria.Main
-import fr.pickaria.cooldownTeleport
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import fr.pickaria.tpa.TeleportController
 
 
 class HomeCommand : CommandExecutor, TabCompleter {
@@ -27,7 +27,7 @@ class HomeCommand : CommandExecutor, TabCompleter {
 				if (location.block.type.isOccluding) {
 					sender.sendMessage("§cCe point de teleportation n'est pas sécurisé, vous ne pouvez pas y être téléporté.")
 				} else {
-					cooldownTeleport(sender, location)
+					TeleportController.cooldownTeleport(sender, location)
 				}
 			} else {
 				sender.sendMessage("§cCe point de teleportation n'existe pas.")

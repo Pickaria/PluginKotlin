@@ -1,7 +1,7 @@
 package fr.pickaria.randomtp
 
 import fr.pickaria.Main
-import fr.pickaria.cooldownTeleport
+import fr.pickaria.tpa.TeleportController
 import net.milkbowl.vault.economy.EconomyResponse
 import org.bukkit.Location
 import org.bukkit.block.Biome
@@ -79,18 +79,20 @@ class RandomCommand : CommandExecutor {
 	}
 
 	private fun teleportPlayer(sender: Player) {
-		var location: Location
 		var tries = 0
+		var x: Int
+		var z: Int
 
 		do {
-			val x = random.nextDouble() * maxRadius
-			val z = random.nextDouble() * maxRadius
-			location = Location(sender.world, x, 0.0, z)
-			location.y = sender.world.getHighestBlockYAt(location) + 1.0
-		} while (EXCLUDED_BIOMES.contains(location.world?.getBiome(location)) && tries++ < 5)
+			x = random.nextInt(maxRadius)
+			z = random.nextInt(maxRadius)
+		} while (EXCLUDED_BIOMES.contains(sender.world?.getBiome(x, z)) && tries++ < 5)
 
 		lastTeleport[sender] = LocalDateTime.now()
 
-		cooldownTeleport(sender, location)
+		val location = Location(sender.world, x.toDouble(), 0.0, z.toDouble())
+		location.y = sender.world.getHighestBlockYAt(location) + 1.0
+
+		TeleportController.cooldownTeleport(sender, location)
 	}
 }
