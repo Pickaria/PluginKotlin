@@ -19,7 +19,7 @@ class TpacceptCommand : CommandExecutor {
 
 				TeleportController.map.remove(sender)
 			} ?: run {
-				sender.sendMessage("§cAucune téléportation en cours.")
+				sender.sendMessage("§cAucune demande de téléportation en cours.")
 			}
 		}
 

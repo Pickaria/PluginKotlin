@@ -52,9 +52,15 @@ commands:
   tpaccept:
     description: Accepter une demande de teleportation
     usage: /tpaccept
+    aliases:
+      - tpoui
+      - tpyes
   tpdeny:
     description: Refuser une demande de teleportation
     usage: /tpdeny
+    aliases:
+      - tpno
+      - tpnon
   tpcancel:
     description: Annuler une demande de teleportation
     usage: /tpcancel
