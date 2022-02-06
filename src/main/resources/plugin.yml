@@ -43,3 +43,15 @@ commands:
   delhome:
     description: Supprime un point de téléportation
     usage: /delhome [home]
+  tpa:
+    description: Demande de teleportation vers un joueur
+    usage: /tpa <joueur>
+  tpaccept:
+    description: Accepter une demande de teleportation
+    usage: /tpaccept
+  tpdeny:
+    description: Refuser une demande de teleportation
+    usage: /tpdeny
+  tpcancel:
+    description: Annuler une demande de teleportation
+    usage: /tpcancel

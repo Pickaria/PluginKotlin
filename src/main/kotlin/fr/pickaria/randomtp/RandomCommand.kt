@@ -37,8 +37,8 @@ class RandomCommand : CommandExecutor {
 			Biome.FROZEN_RIVER,
 
 			// Powder snow biomes
-			Biome.SNOWY_SLOPES,
-			Biome.GROVE,
+//			Biome.SNOWY_SLOPES,
+//			Biome.GROVE,
 		)
 	}
 

@@ -25,6 +25,9 @@ import kotlinx.coroutines.*
 import fr.pickaria.homes.DelHomeCommand
 import fr.pickaria.homes.HomeCommand
 import fr.pickaria.homes.SetHomeCommand
+import fr.pickaria.tpa.TpaCommand
+import fr.pickaria.tpa.TpacceptCommand
+import fr.pickaria.tpa.TpdenyCommand
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -98,6 +101,11 @@ class Main: SuspendingJavaPlugin() {
 			getCommand("sethome")?.setExecutor(SetHomeCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 			getCommand("home")?.setExecutor(HomeCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 			getCommand("delhome")?.setExecutor(DelHomeCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+
+			// TPA
+			getCommand("tpa")?.setExecutor(TpaCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("tpaccept")?.setExecutor(TpacceptCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
+			getCommand("tpdeny")?.setExecutor(TpdenyCommand()) ?: server.logger.log(Level.WARNING, "Command could not be registered")
 		}
 
 		setupChat()
