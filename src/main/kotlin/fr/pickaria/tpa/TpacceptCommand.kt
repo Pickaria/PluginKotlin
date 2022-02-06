@@ -40,6 +40,7 @@ class TpacceptCommand : CommandExecutor {
 			} else {
 				teleportPlayer(recipient, sender)
 				recipient.sendMessage("§7Vous avez été teleporté.")
+				map.remove(sender, recipient)
 			}
 		}
 		return true
