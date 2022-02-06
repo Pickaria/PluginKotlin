@@ -9,24 +9,20 @@ import org.bukkit.entity.Player
 class TpacceptCommand : CommandExecutor {
 
 	override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
-
 		if (sender is Player) {
-			val recipient: Player = try {
-				TeleportController.map[sender]!!
-			} catch (_: NullPointerException) {
-				sender.sendMessage("§cAucune téléportation en cours.")
-				return true
-			}
+			TeleportController.map[sender]?.let {
+				if (it.second) {
+					TeleportController.cooldownTeleport(sender, it.first.location)
+				} else {
+					TeleportController.cooldownTeleport(it.first, sender.location)
+				}
 
-			sender.sendMessage("§7${recipient}")
-
-			if (recipient == sender) {
-				sender.sendMessage("§c???.")
-			} else {
-				TeleportController.cooldownTeleport(recipient, sender.location)
 				TeleportController.map.remove(sender)
+			} ?: run {
+				sender.sendMessage("§cAucune téléportation en cours.")
 			}
 		}
+
 		return true
 	}
 

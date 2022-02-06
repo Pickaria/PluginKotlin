@@ -11,7 +11,7 @@ class TpdenyCommand : CommandExecutor {
 		if (sender is Player) {
 			TeleportController.map[sender]?.let {
 				TeleportController.map.remove(sender)
-				it.sendMessage("§7Votre demande à été refusée ")
+				it.first.sendMessage("§7Votre demande à été refusée ")
 			} ?: run {
 				sender.sendMessage("§cAucune demande de téléportation en cours")
 			}
