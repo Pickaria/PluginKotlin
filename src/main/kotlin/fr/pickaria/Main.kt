@@ -6,8 +6,8 @@ import fr.pickaria.economy.PayCommand
 import fr.pickaria.randomtp.RandomCommand
 import fr.pickaria.economy.PickariaEconomy
 import fr.pickaria.tpa.TpaCommand
-import fr.pickaria.tpa.TpdenyCommand
 import fr.pickaria.tpa.TpacceptCommand
+import fr.pickaria.tpa.TpdenyCommand
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.plugin.ServicePriority
@@ -16,6 +16,7 @@ import org.ktorm.database.Database
 import org.ktorm.support.postgresql.PostgreSqlDialect
 import java.sql.SQLException
 import java.util.logging.Level
+
 
 
 class Main: JavaPlugin() {

@@ -1,6 +1,6 @@
 # Pickaria configuration file
 
 database:
-  url: "jdbc:postgresql://localhost/pickaria"
-  user: "admin"
-  password: "admin"
+  url: "jdbc:postgresql://pickaria.fr:5432/dev"
+  user: "alina"
+  password: "vgu9GUJP"
