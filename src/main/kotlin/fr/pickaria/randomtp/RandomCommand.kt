@@ -1,6 +1,7 @@
 package fr.pickaria.randomtp
 
 import fr.pickaria.Main
+import fr.pickaria.cooldownTeleport
 import net.milkbowl.vault.economy.EconomyResponse
 import org.bukkit.Location
 import org.bukkit.block.Biome
@@ -8,7 +9,6 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.scheduler.BukkitRunnable
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.HashMap
@@ -18,7 +18,6 @@ class RandomCommand : CommandExecutor {
 	companion object {
 		private const val TAG = "FIRST_RTP_USED"
 		private const val PRICE = 100.0
-		private const val TELEPORT_COOLDOWN = 100L // Cooldown before teleporting
 		private const val BETWEEN_TELEPORT_COOLDOWN = 20 // Cooldown during teleports
 
 		private val EXCLUDED_BIOMES = setOf(
@@ -80,8 +79,6 @@ class RandomCommand : CommandExecutor {
 	}
 
 	private fun teleportPlayer(sender: Player) {
-		sender.sendMessage("§7Téléportation dans ${TELEPORT_COOLDOWN / 20} secondes.")
-
 		var location: Location
 		var tries = 0
 
@@ -94,10 +91,6 @@ class RandomCommand : CommandExecutor {
 
 		lastTeleport[sender] = LocalDateTime.now()
 
-		object : BukkitRunnable() {
-			override fun run() {
-				sender.teleport(location)
-			}
-		}.runTaskLater(Main.plugin, TELEPORT_COOLDOWN)
+		cooldownTeleport(sender, location)
 	}
 }
