@@ -26,14 +26,14 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt")
 
     // Database
-    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("org.postgresql:postgresql:42.3.2")
     implementation("org.ktorm:ktorm-core:3.4.1")
     implementation("org.ktorm:ktorm-support-postgresql:3.4.1")
 
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:1.5.0")
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:1.5.0")
 
-    compileOnly("org.spigotmc:spigot:1.18.1-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot:1.18.2-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")
