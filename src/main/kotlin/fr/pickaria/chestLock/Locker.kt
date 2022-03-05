@@ -1,10 +1,7 @@
 package fr.pickaria.chestLock
 
 import fr.pickaria.Main
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.Server
-import org.bukkit.Tag
+import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.Sign
@@ -16,8 +13,10 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
+import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.inventory.ItemStack
 
 class Locker(plugin: Main): Listener {
     /**
@@ -72,23 +71,22 @@ class Locker(plugin: Main): Listener {
         when (block.type) {
             in lockableContainers -> {
                 var facing = event.blockFace
-                if (facing !in cardinalFaces)
+                if (facing !in cardinalFaces) // prevents on top/bottom wall sign (illegal placement)
                     facing = event.player.facing.oppositeFace
                 if (isLockedContainer(block)) {
                     if (getLockerSignFromContainer(block)?.let { isPlayerTrustedByLockerSign(player, it) } != true) {
-                        player.sendMessage("Access denied.")
                         event.isCancelled = true
+                        player.sendMessage("Access denied.")
                     }
                 } else if (event.material in signMapped && block.getRelative(facing).type.isAir) {
                     setLockerSignFromContainer(block, facing, player, event.material)
-                    event.setUseItemInHand(Event.Result.ALLOW) // just place the sign
-                    event.setUseInteractedBlock(Event.Result.DENY) // no other interaction
+                    event.setUseInteractedBlock(Event.Result.DENY) // no need to open
                     player.sendMessage("Successfully locked this container.")
                 }
             }
             in Tag.WALL_SIGNS.values -> {
                 if (isLockerSign(block) && isPlayerOwnerOfLockerSign(player, block)) {
-                    editLockerSignFromContainer(block)
+                    updateLockerSignFromContainer(block)
                     player.sendMessage("Access perms have been updated.")
                 }
             }
@@ -106,7 +104,55 @@ class Locker(plugin: Main): Listener {
         // debug
         player.sendMessage("Passed: onBlockDamage.")
 
-        // to do
+        val block = event.block
+        when (block.type) {
+            in lockableContainers -> {
+                if (isLockedContainer(block)) {
+                    event.isCancelled = true
+                    player.sendMessage("This container is locked. Please remove the sign first.")
+                }
+            }
+            in Tag.WALL_SIGNS.values -> {
+                if (isLockerSign(block)) {
+                    if (!isPlayerOwnerOfLockerSign(player, block)) {
+                        event.isCancelled = true
+                        player.sendMessage("You are not allowed to do this.")
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    fun onBlockBreak(event: BlockBreakEvent) {
+        /**
+         * Manage LockerSign destruction
+         */
+        val player = event.player
+
+        // debug
+        player.sendMessage("Passed: onBlockDamage.")
+
+        if (player.gameMode == GameMode.CREATIVE) return
+        val block = event.block
+        when (block.type) {
+            in lockableContainers -> {
+                if (isLockedContainer(block)) {
+                    event.isCancelled = true
+                    player.sendMessage("This container is locked. Please remove the sign first.")
+                }
+            }
+            in Tag.WALL_SIGNS.values -> {
+                if (isLockerSign(block)) {
+                    if (!isPlayerOwnerOfLockerSign(player, block)) {
+                        event.isCancelled = true
+                        player.sendMessage("You are not allowed to do this.")
+                    }
+                }
+            }
+            else -> {}
+        }
     }
 
     private fun getDoubleChest(container: Block): Block {
@@ -143,7 +189,7 @@ class Locker(plugin: Main): Listener {
 
     private fun isDoubleChest(container: Block): Boolean {
         /**
-         * Checks if the given container is linked to another (double chests)
+         * Checks if the given container is double (chests only)
          */
         if (container.type !in setOf(Material.CHEST, Material.TRAPPED_CHEST)) return false
         return ((container.blockData as Chest).type != Chest.Type.SINGLE)
@@ -156,10 +202,6 @@ class Locker(plugin: Main): Listener {
         if (isDoubleChest(container)) {
             // check for the other chest
             val doubleChest = getDoubleChest(container)
-            server.getPlayer("SevRusse")?.sendMessage(
-                "Double coffre (visé): " + container.location.toString() +
-                "\nAutre coffre: " + doubleChest.location.toString()
-            )
             for (facing in cardinalFaces) {
                 if (isLockerSign(doubleChest.getRelative(facing)))
                     return true
@@ -204,31 +246,82 @@ class Locker(plugin: Main): Listener {
         return false
     }
 
-    private fun editLockerSignFromContainer(sign: Block) {
-        /**
-         * allows edition of the LockerSign if it belongs to the player
-         */
-
-        // to continue
-    }
-
     private fun setLockerSignFromContainer(container: Block, facing: BlockFace, player: Player, material: Material): Block {
         /**
-         * set a new LockerSign against the free-access Container.
+         * Set a new LockerSign against the free-access Container.
          */
         val sign = container.getRelative(facing)
 
         signMapped[material]?.let { sign.type = it }
-        val signState = (sign.state as Sign)
-        signState.setLine(0, lockerWord)
-        signState.setLine(1, player.name)
-        signState.update()
+        setSignLine(sign, 0, lockerWord)
+        setSignLine(sign, 1, player.name)
 
         val signData = (sign.blockData as WallSign)
         signData.facing = facing
         sign.blockData = signData
 
+        updateSignInHands(player)
         return sign
+    }
+
+    private fun setSignLine(block: Block, line: Int, text: String) {
+        val sign = (block.state as Sign)
+        sign.setLine(line, text)
+        sign.update()
+    }
+
+    private fun updateLockerSignFromContainer(block: Block) {
+        /**
+         * If the LockerSign belongs to the player,
+         * enters a menu to pick another player (to or not trust anymore),
+         * then adds the chosen player to trust on this container.
+         *
+         * Trusted players, except the owner, must be at most 2.
+         */
+//        val sign = (block.state as Sign)
+
+        // A menu will open for choosing which action to do : add trust / remove trust
+        /*
+        val action = menuChoseAction("What do you want to change about trusting ?", "add", "remove")
+        */
+
+        // A sub-menu will replace the first one : choosing player to trust / do not trust
+        /*
+        val player = if (action == "add" && signState.getLine(3) == "") {
+            menuChoosePlayer("Add trusted player", listOfEligiblePlayers)
+        } else if (action == "remove" && signState.getLine(2) != "") {
+            menuChoosePlayer("Remove trusted player", listOfEligiblePlayers)
+        } else { // error
+            return
+        }
+        */
+
+        // Then, all we have to do is add/remove the selected player to/from the LockerSign
+        /*
+        // conditions are the same as above, it will be attached together at the end;
+        // it's just a schema.
+        if (action == "add" && signState.getLine(3) == "") {
+            signState.setLine(signState.lines.indexOfFirst{ it == "" }, player)
+        } else if (action == "remove" && signState.getLine(2) != "") {
+            signState.setLine(signState.lines.indexOf{ it == player }, "")
+        }
+        */
+
+        // Modify data stored into the sign to allow/restrict access for the selected player
+
+        // ... to update soon
+    }
+
+    private fun updateSignInHands(player: Player) {
+        /**
+         * When a LockerSign is put, remove one from the Player's inventory.
+         */
+        if (player.gameMode == GameMode.CREATIVE) return
+        if (player.inventory.itemInMainHand.amount == 1) {
+            player.inventory.setItemInMainHand(ItemStack(Material.AIR))
+        } else {
+            player.inventory.itemInMainHand.amount = player.inventory.itemInMainHand.amount - 1
+        }
     }
 
 /*

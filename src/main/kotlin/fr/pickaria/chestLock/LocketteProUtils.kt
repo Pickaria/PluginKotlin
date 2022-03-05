@@ -110,7 +110,7 @@ class LocketteProUtils(plugin: Main): Listener {
         selectedSign.put(player.uniqueId, block)
     }
 
-    private fun playLockEffect(player: Player, block: Block) {
+    fun playLockEffect(player: Player, block: Block) {
         player.playSound(block.location, Sound.BLOCK_WOODEN_DOOR_CLOSE, 0.3F, 1.4F)
 //        player.spigot().playEffect(block.location.add(0.5, 0.5, 0.5), Effect.CRIT, 0, 0, 0.3F, 0.3F, 0.3F, 0.1F, 64, 64)
     }
@@ -231,7 +231,7 @@ class LocketteProUtils(plugin: Main): Listener {
         return text.length in 3..16 && text.matches(Regex.fromLiteral(userNamePattern))
     }
 
-    // Warning: don't ise this in a sync way
+    // Warning: don't use this in a sync way
     fun getUuidByUsernameFromMojang(username: String): String? {
         try {
             val url = URL("https://api.mojang.com/users/profiles/minecraft/$username")
