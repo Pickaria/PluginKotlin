@@ -13,17 +13,16 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
-import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDamageEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 
 class Locker(plugin: Main): Listener {
     /**
-     * Anti-thief protection for chests.
+     * Anti-thief protection for containers.
      */
     companion object {
-        lateinit var key: NamespacedKey
+        // lateinit var key: NamespacedKey
         lateinit var server: Server
 
         val lockableContainers = setOf(
@@ -52,7 +51,7 @@ class Locker(plugin: Main): Listener {
             Material.WARPED_SIGN    to Material.WARPED_WALL_SIGN)
     }
     init {
-        key = NamespacedKey(plugin, "signKey")
+        // key = NamespacedKey(plugin, "signKey")
         server = plugin.server
     }
 
@@ -104,37 +103,6 @@ class Locker(plugin: Main): Listener {
         // debug
         player.sendMessage("Passed: onBlockDamage.")
 
-        val block = event.block
-        when (block.type) {
-            in lockableContainers -> {
-                if (isLockedContainer(block)) {
-                    event.isCancelled = true
-                    player.sendMessage("This container is locked. Please remove the sign first.")
-                }
-            }
-            in Tag.WALL_SIGNS.values -> {
-                if (isLockerSign(block)) {
-                    if (!isPlayerOwnerOfLockerSign(player, block)) {
-                        event.isCancelled = true
-                        player.sendMessage("You are not allowed to do this.")
-                    }
-                }
-            }
-            else -> {}
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    fun onBlockBreak(event: BlockBreakEvent) {
-        /**
-         * Manage LockerSign destruction
-         */
-        val player = event.player
-
-        // debug
-        player.sendMessage("Passed: onBlockDamage.")
-
-        if (player.gameMode == GameMode.CREATIVE) return
         val block = event.block
         when (block.type) {
             in lockableContainers -> {
