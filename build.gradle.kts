@@ -12,12 +12,14 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    mavenLocal()
 
     maven("https://repo.dmulloy2.net/repository/public/") // protocol lib
     maven("https://jitpack.io") // vault
     //maven("https://dl.bintray.com/nuvotifier/maven/") // votifier
     maven("https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/") // langutils
+
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
 }
 
 dependencies {
@@ -33,7 +35,7 @@ dependencies {
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:1.5.0")
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:1.5.0")
 
-    compileOnly("org.spigotmc:spigot:1.18.2-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.NuVotifier.NuVotifier:nuvotifier-bukkit:2.6.0")

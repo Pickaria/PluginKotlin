@@ -10,7 +10,6 @@ import fr.pickaria.economy.PickariaEconomy
 import fr.pickaria.enchant.Anvil
 import fr.pickaria.jobs.JobCommand
 import fr.pickaria.jobs.JobController
-import fr.pickaria.menus.MenuCommand
 import fr.pickaria.menus.MenuController
 import fr.pickaria.spawners.CollectSpawner
 import fr.pickaria.tablist.ChatFormat
